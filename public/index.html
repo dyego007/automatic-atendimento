@@ -81,6 +81,9 @@
           <i class="fas fa-comments text-sm w-4"></i> Conversas ao Vivo
           <span id="unreadBadge" class="ml-auto bg-emerald-500 text-slate-950 text-[10px] font-bold px-1.5 py-0.2 rounded-full hidden">0</span>
         </button>
+        <button onclick="switchTab('appointments')" id="navBtn-appointments" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
+          <i class="fas fa-calendar-check text-sm w-4"></i> Agendamentos & Horários
+        </button>
         <button onclick="switchTab('simulator')" id="navBtn-simulator" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
           <i class="fas fa-mobile-alt text-sm w-4"></i> Simulador Virtual
         </button>
@@ -364,6 +367,178 @@
           </div>
 
         </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- ABA: AGENDAMENTOS, HORÁRIOS & SERVIÇOS -->
+      <!-- ========================================== -->
+      <div id="tab-appointments" class="hidden space-y-6">
+
+        <!-- Topo com Filtros & Botão de Novo Agendamento -->
+        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+              <i class="fas fa-calendar-check text-emerald-400"></i> Gestão de Agendamentos & Clínica
+            </h3>
+            <p class="text-xs text-slate-400 mt-1">
+              Gerencie as consultas marcadas pela IA no WhatsApp, cadastre procedimentos com preços e defina os horários de atendimento.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <input type="date" id="appointmentDateFilter" onchange="loadAppointments()" class="bg-slate-900 border border-slate-700 text-xs text-white rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500">
+            <button onclick="setFilterDateToday()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl transition">
+              Hoje
+            </button>
+            <button onclick="openNewAppointmentModal()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-1.5">
+              <i class="fas fa-plus"></i> Novo Agendamento
+            </button>
+          </div>
+        </div>
+
+        <!-- Seções Internas (Consultas Marcadas / Serviços / Horários) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <!-- Coluna Principal: Consultas do Dia -->
+          <div class="lg:col-span-8 space-y-4">
+            
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 shadow-xl">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                <h4 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                  <i class="fas fa-clock text-teal-400"></i> Consultas Marcadas para o Dia
+                </h4>
+                <span id="appointmentCountBadge" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
+                  0 consultas
+                </span>
+              </div>
+
+              <!-- Lista de Consultas -->
+              <div id="appointmentsList" class="space-y-3">
+                <div class="text-center py-10 text-slate-500 text-xs">Carregando consultas da clínica...</div>
+              </div>
+
+              <!-- Modal / Form Rápido de Novo Agendamento Manual -->
+              <div id="newAppointmentCard" class="hidden mt-4 pt-4 border-t border-slate-800 bg-slate-900/60 p-4 rounded-xl space-y-3">
+                <div class="text-xs font-bold text-slate-200">➕ Inserir Novo Agendamento Manual:</div>
+                <form onsubmit="handleCreateAppointment(event)" class="space-y-3">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input type="text" id="aptCustomerName" placeholder="Nome do Paciente" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="aptCustomerPhone" placeholder="WhatsApp (ex: 5511999998888)" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <select id="aptServiceSelect" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-emerald-400">
+                      <!-- Carregado via JS -->
+                    </select>
+                    <div class="flex gap-2">
+                      <input type="date" id="aptDate" required class="w-1/2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                      <input type="time" id="aptTime" required class="w-1/2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                  </div>
+                  <input type="text" id="aptNotes" placeholder="Observações (ex: primeira consulta, urgência)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                  <div class="flex gap-2">
+                    <button type="submit" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl">Salvar Agendamento</button>
+                    <button type="button" onclick="document.getElementById('newAppointmentCard').classList.add('hidden')" class="px-3 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancelar</button>
+                  </div>
+                </form>
+              </div>
+
+            </div>
+
+            <!-- Gerenciador de Serviços & Procedimentos -->
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div>
+                  <h4 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <i class="fas fa-stethoscope text-emerald-400"></i> Catálogo de Serviços & Preços
+                  </h4>
+                  <p class="text-[11px] text-slate-400">Estes são os serviços e valores que a IA informa aos pacientes no WhatsApp</p>
+                </div>
+                <button onclick="document.getElementById('newServiceForm').classList.toggle('hidden')" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
+                  <i class="fas fa-plus"></i> Novo Serviço
+                </button>
+              </div>
+
+              <!-- Formulário de Novo Serviço -->
+              <form id="newServiceForm" onsubmit="handleCreateService(event)" class="hidden bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <input type="text" id="srvName" placeholder="Nome (ex: Limpeza & Profilaxia)" required class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                  <input type="text" id="srvPrice" placeholder="Preço (ex: R$ 180,00)" required class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                  <input type="text" id="srvDuration" placeholder="Duração (ex: 45 min)" required class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                </div>
+                <input type="text" id="srvDesc" placeholder="Descrição rápida / Orientações para o paciente" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <div class="flex gap-2">
+                  <button type="submit" class="px-4 py-1.5 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl">Salvar Serviço</button>
+                  <button type="button" onclick="document.getElementById('newServiceForm').classList.add('hidden')" class="px-3 py-1.5 bg-slate-800 text-slate-400 text-xs rounded-xl">Cancelar</button>
+                </div>
+              </form>
+
+              <!-- Lista de Serviços -->
+              <div id="servicesList" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <!-- Carregado via JS -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Coluna Lateral: Configuração de Horários de Funcionamento -->
+          <div class="lg:col-span-4 bg-slate-950 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+            <div class="border-b border-slate-800 pb-3">
+              <h4 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                <i class="fas fa-business-time text-amber-400"></i> Horários da Clínica
+              </h4>
+              <p class="text-[11px] text-slate-400">A IA só oferecerá agendamento dentro desta janela de horários</p>
+            </div>
+
+            <form onsubmit="handleSaveSchedule(event)" class="space-y-3 text-xs">
+              <div>
+                <label class="block text-slate-400 font-semibold mb-1">Horário de Abertura</label>
+                <input type="time" id="schStart" value="08:00" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white">
+              </div>
+
+              <div>
+                <label class="block text-slate-400 font-semibold mb-1">Horário de Fechamento</label>
+                <input type="time" id="schEnd" value="18:00" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white">
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-slate-400 font-semibold mb-1">Início Almoço</label>
+                  <input type="time" id="schLunchStart" value="12:00" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                  <label class="block text-slate-400 font-semibold mb-1">Fim Almoço</label>
+                  <input type="time" id="schLunchEnd" value="13:00" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-slate-400 font-semibold mb-1">Duração do Slot por Consulta</label>
+                <select id="schSlotMinutes" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-emerald-400 font-semibold">
+                  <option value="30">30 minutos</option>
+                  <option value="45" selected>45 minutos</option>
+                  <option value="60">1 hora (60 minutos)</option>
+                  <option value="90">1 hora e 30 minutos</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-slate-400 font-semibold mb-1.5">Dias de Atendimento</label>
+                <div class="grid grid-cols-3 gap-1.5 text-[11px]">
+                  <label class="flex items-center gap-1.5 bg-slate-900 p-2 rounded-lg cursor-pointer"><input type="checkbox" id="day-seg" checked> Seg</label>
+                  <label class="flex items-center gap-1.5 bg-slate-900 p-2 rounded-lg cursor-pointer"><input type="checkbox" id="day-ter" checked> Ter</label>
+                  <label class="flex items-center gap-1.5 bg-slate-900 p-2 rounded-lg cursor-pointer"><input type="checkbox" id="day-qua" checked> Qua</label>
+                  <label class="flex items-center gap-1.5 bg-slate-900 p-2 rounded-lg cursor-pointer"><input type="checkbox" id="day-qui" checked> Qui</label>
+                  <label class="flex items-center gap-1.5 bg-slate-900 p-2 rounded-lg cursor-pointer"><input type="checkbox" id="day-sex" checked> Sex</label>
+                  <label class="flex items-center gap-1.5 bg-slate-900 p-2 rounded-lg cursor-pointer"><input type="checkbox" id="day-sab" checked> Sáb</label>
+                </div>
+              </div>
+
+              <button type="submit" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl transition shadow-lg shadow-emerald-500/20 text-xs mt-3">
+                Salvar Horários da Clínica
+              </button>
+            </form>
+          </div>
+
+        </div>
+
       </div>
 
       <!-- ========================================== -->

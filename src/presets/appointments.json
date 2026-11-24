@@ -1,0 +1,26 @@
+[
+  {
+    "id": "apt-1",
+    "storeId": "loja-1",
+    "customerName": "Leonardo Viana",
+    "customerPhone": "10338137284706",
+    "serviceName": "Avaliação Inicial + Raio-X Diagnóstico",
+    "date": "2026-11-24",
+    "time": "10:00",
+    "status": "confirmed",
+    "notes": "Paciente relatou sensibilidade no molar.",
+    "createdAt": "2026-11-24T12:43:09.954Z"
+  },
+  {
+    "id": "apt-2",
+    "storeId": "loja-1",
+    "customerName": "Carol Silva",
+    "customerPhone": "5511988887777",
+    "serviceName": "Clareamento Dental a Laser",
+    "date": "2026-11-24",
+    "time": "14:30",
+    "status": "pending",
+    "notes": "Primeira sessão do clareamento.",
+    "createdAt": "2026-11-24T12:43:09.954Z"
+  }
+]

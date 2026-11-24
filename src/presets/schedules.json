@@ -1,0 +1,17 @@
+{
+  "loja-1": {
+    "days": [
+      "seg",
+      "ter",
+      "qua",
+      "qui",
+      "sex",
+      "sab"
+    ],
+    "startTime": "08:00",
+    "endTime": "18:00",
+    "lunchStart": "12:00",
+    "lunchEnd": "13:00",
+    "slotMinutes": 45
+  }
+}

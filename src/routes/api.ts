@@ -4,6 +4,7 @@ import { sessionService } from '../services/sessionService.js';
 import { whatsappService } from '../services/whatsappService.js';
 import { baileysService } from '../services/baileysService.js';
 import { storeService } from '../services/storeService.js';
+import { appointmentService } from '../services/appointmentService.js';
 
 export const apiRouter = Router();
 
@@ -232,4 +233,96 @@ apiRouter.post('/simulator/send', async (req, res) => {
   });
 
   res.json(result);
+});
+
+// --- Módulo de Agendamentos, Horários & Serviços ---
+apiRouter.get('/appointments', (req, res) => {
+  const storeId = (req.query.storeId as string) || storeService.getActiveStore().id;
+  const date = req.query.date as string | undefined;
+  const list = appointmentService.listAppointments(storeId, date);
+  res.json(list);
+});
+
+apiRouter.post('/appointments', (req, res) => {
+  const storeId = req.body.storeId || storeService.getActiveStore().id;
+  const { customerName, customerPhone, serviceName, date, time, notes, status = 'confirmed' } = req.body;
+
+  if (!customerName || !customerPhone || !serviceName || !date || !time) {
+    return res.status(400).json({ error: 'Preencha nome, telefone, serviço, data e horário.' });
+  }
+
+  const created = appointmentService.createAppointment({
+    storeId,
+    customerName,
+    customerPhone,
+    serviceName,
+    date,
+    time,
+    status,
+    notes
+  });
+
+  res.json({ message: 'Agendamento criado com sucesso!', appointment: created });
+});
+
+apiRouter.patch('/appointments/:id/status', (req, res) => {
+  const { status } = req.body;
+  if (!['confirmed', 'pending', 'cancelled', 'completed'].includes(status)) {
+    return res.status(400).json({ error: 'Status de agendamento inválido.' });
+  }
+  try {
+    const updated = appointmentService.updateAppointmentStatus(req.params.id, status);
+    res.json({ message: 'Status do agendamento atualizado.', appointment: updated });
+  } catch (err: any) {
+    res.status(404).json({ error: err.message });
+  }
+});
+
+apiRouter.delete('/appointments/:id', (req, res) => {
+  const ok = appointmentService.deleteAppointment(req.params.id);
+  res.json({ message: 'Agendamento removido com sucesso.', success: ok });
+});
+
+// Horários de Funcionamento da Loja
+apiRouter.get('/schedules', (req, res) => {
+  const storeId = (req.query.storeId as string) || storeService.getActiveStore().id;
+  const schedule = appointmentService.getStoreSchedule(storeId);
+  res.json(schedule);
+});
+
+apiRouter.post('/schedules', (req, res) => {
+  const storeId = req.body.storeId || storeService.getActiveStore().id;
+  const updated = appointmentService.saveStoreSchedule(storeId, req.body.schedule);
+  res.json({ message: 'Horários atualizados com sucesso!', schedule: updated });
+});
+
+// Serviços da Loja
+apiRouter.get('/services', (req, res) => {
+  const storeId = (req.query.storeId as string) || storeService.getActiveStore().id;
+  const services = appointmentService.getStoreServices(storeId);
+  res.json(services);
+});
+
+apiRouter.post('/services', (req, res) => {
+  const storeId = req.body.storeId || storeService.getActiveStore().id;
+  const { name, price, duration = '45 min', description = '' } = req.body;
+  if (!name || !price) {
+    return res.status(400).json({ error: 'Nome e preço são obrigatórios.' });
+  }
+  const services = appointmentService.addStoreService(storeId, { name, price, duration, description });
+  res.json({ message: 'Serviço adicionado com sucesso!', services });
+});
+
+apiRouter.delete('/services/:name', (req, res) => {
+  const storeId = (req.query.storeId as string) || storeService.getActiveStore().id;
+  const services = appointmentService.deleteStoreService(storeId, req.params.name);
+  res.json({ message: 'Serviço removido com sucesso!', services });
+});
+
+// Slots Livres
+apiRouter.get('/slots', (req, res) => {
+  const storeId = (req.query.storeId as string) || storeService.getActiveStore().id;
+  const date = (req.query.date as string) || new Date().toISOString().split('T')[0];
+  const slots = appointmentService.getAvailableSlots(storeId, date);
+  res.json({ date, slots });
 });
