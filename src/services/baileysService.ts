@@ -2,7 +2,8 @@ import makeWASocket, {
   useMultiFileAuthState,
   DisconnectReason,
   Browsers,
-  WASocket
+  WASocket,
+  downloadMediaMessage
 } from '@whiskeysockets/baileys';
 import QRCode from 'qrcode';
 import pino from 'pino';
@@ -11,6 +12,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { whatsappService } from './whatsappService.js';
 import { storeService } from './storeService.js';
+import { audioService } from './audioService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -199,7 +201,24 @@ export class BaileysService {
           continue;
         }
 
-        const text = extractMessageText(msg);
+        let text = extractMessageText(msg);
+
+        // Se for mensagem de áudio, baixa e transcreve
+        if (!text && msg.message?.audioMessage) {
+          try {
+            console.log(`🎙️ [Loja ${targetStoreId}] Áudio recebido de ${msg.pushName || 'Cliente'}. Baixando e transcrevendo...`);
+            const buffer = (await downloadMediaMessage(msg, 'buffer', {})) as Buffer;
+            const transcription = await audioService.transcribeAudio(
+              buffer,
+              msg.message.audioMessage.mimetype || 'audio/ogg'
+            );
+            text = `🎙️ [Áudio]: "${transcription}"`;
+          } catch (audioErr) {
+            console.error('Erro ao baixar/transcrever áudio:', audioErr);
+            text = '🎙️ [Áudio recebido]';
+          }
+        }
+
         if (!text) continue;
 
         // O remoteJid pode ser @s.whatsapp.net ou @lid (Linked ID)

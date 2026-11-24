@@ -5,10 +5,83 @@ import { whatsappService } from '../services/whatsappService.js';
 import { baileysService } from '../services/baileysService.js';
 import { storeService } from '../services/storeService.js';
 import { appointmentService } from '../services/appointmentService.js';
-
 import { availabilityService } from '../services/availabilityService.js';
+import { authService } from '../services/authService.js';
 
 export const apiRouter = Router();
+
+// --- Rotas de Autenticação & Usuários ---
+apiRouter.post('/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Informe e-mail e senha.' });
+  }
+  try {
+    const result = authService.login(email, password);
+    res.json(result);
+  } catch (err: any) {
+    res.status(401).json({ error: err.message });
+  }
+});
+
+apiRouter.get('/auth/me', (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '') || '';
+  const user = authService.getUserByToken(token);
+  if (!user) {
+    return res.status(401).json({ error: 'Sessão inválida ou expirada.' });
+  }
+  res.json({ user });
+});
+
+apiRouter.post('/auth/logout', (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '') || '';
+  authService.logout(token);
+  res.json({ message: 'Logout realizado com sucesso.' });
+});
+
+apiRouter.get('/users', (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '') || '';
+  const user = authService.getUserByToken(token);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ error: 'Acesso restrito ao administrador do SaaS.' });
+  }
+  res.json(authService.listUsers());
+});
+
+apiRouter.post('/users', (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '') || '';
+  const user = authService.getUserByToken(token);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ error: 'Acesso restrito ao administrador do SaaS.' });
+  }
+
+  const { name, email, password, role, storeId } = req.body;
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({ error: 'Preencha nome, e-mail, senha e perfil.' });
+  }
+
+  try {
+    const created = authService.createUser({ name, email, password, role, storeId });
+    res.json({ message: 'Usuário cadastrado com sucesso!', user: created });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+apiRouter.delete('/users/:id', (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '') || '';
+  const user = authService.getUserByToken(token);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ error: 'Acesso restrito ao administrador do SaaS.' });
+  }
+
+  try {
+    const ok = authService.deleteUser(req.params.id);
+    res.json({ message: 'Usuário removido com sucesso.', success: ok });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
 // --- Agenda: horários explícitos por loja e data (horário de Brasília) ---
 apiRouter.get('/stores/:id/agenda', (req, res) => {

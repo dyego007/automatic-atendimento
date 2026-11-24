@@ -3,26 +3,153 @@ let currentNiche = null;
 let selectedChatPhone = null;
 let simPhone = '5511999998888';
 let pollInterval = null;
+let currentUser = null;
 
-// Inicialização
+// Inicialização com Autenticação
 document.addEventListener('DOMContentLoaded', async () => {
+  const isAuth = await checkAuth();
+  if (isAuth) {
+    await initApp();
+  }
+});
+
+async function checkAuth() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    document.getElementById('loginScreen')?.classList.remove('hidden');
+    return false;
+  }
+
+  try {
+    const res = await fetch('/api/auth/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!res.ok) {
+      localStorage.removeItem('token');
+      document.getElementById('loginScreen')?.classList.remove('hidden');
+      return false;
+    }
+
+    const data = await res.json();
+    currentUser = data.user;
+    document.getElementById('loginScreen')?.classList.add('hidden');
+    applyUserPermissions(currentUser);
+    return true;
+  } catch (err) {
+    document.getElementById('loginScreen')?.classList.remove('hidden');
+    return false;
+  }
+}
+
+function applyUserPermissions(user) {
+  if (!user) return;
+
+  const initials = user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+  document.getElementById('userAvatar').textContent = initials;
+  document.getElementById('userNameLabel').textContent = user.name;
+
+  const roleBadge = document.getElementById('userRoleBadge');
+  const btnStores = document.getElementById('navBtn-stores');
+  const btnNiches = document.getElementById('navBtn-niches');
+  const topStoreSelect = document.getElementById('topStoreSelect');
+
+  if (user.role === 'operator') {
+    roleBadge.textContent = '🩺 Secretária / Operador';
+    roleBadge.className = 'text-[10px] font-semibold text-teal-400 truncate';
+
+    // Oculta abas restritas ao admin do SaaS
+    btnStores?.classList.add('hidden');
+    btnNiches?.classList.add('hidden');
+    if (topStoreSelect) {
+      topStoreSelect.disabled = true;
+    }
+  } else {
+    roleBadge.textContent = '👑 Administrador SaaS';
+    roleBadge.className = 'text-[10px] font-semibold text-amber-400 truncate';
+
+    btnStores?.classList.remove('hidden');
+    btnNiches?.classList.remove('hidden');
+    if (topStoreSelect) {
+      topStoreSelect.disabled = false;
+    }
+  }
+}
+
+async function handleLoginSubmit(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Erro no login.');
+    }
+
+    const data = await res.json();
+    localStorage.setItem('token', data.token);
+    currentUser = data.user;
+    document.getElementById('loginScreen').classList.add('hidden');
+    applyUserPermissions(currentUser);
+    await initApp();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+function fillQuickLogin(email, password) {
+  document.getElementById('loginEmail').value = email;
+  document.getElementById('loginPassword').value = password;
+  document.querySelector('#loginScreen form button[type="submit"]').click();
+}
+
+async function handleLogout() {
+  const token = localStorage.getItem('token');
+  if (token) {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  }
+  localStorage.removeItem('token');
+  currentUser = null;
+  document.getElementById('loginScreen').classList.remove('hidden');
+}
+
+async function initApp() {
   await loadNiches();
   await loadStores();
-  await refreshActiveStoreData();
 
-  pollInterval = setInterval(async () => {
-    if (currentStore) {
-      await checkStoreWhatsAppStatus(currentStore.id);
-      await loadStoreStats(currentStore.id);
-      if (!document.getElementById('tab-livechat').classList.contains('hidden')) {
-        await loadLiveSessions(false);
-        if (selectedChatPhone) {
-          await loadActiveChatMessages(selectedChatPhone);
+  // Se for operador de loja específica, força a loja dele
+  if (currentUser && currentUser.role === 'operator' && currentUser.storeId) {
+    await changeActiveStore(currentUser.storeId);
+    switchTab('appointments');
+  } else {
+    await refreshActiveStoreData();
+  }
+
+  if (!pollInterval) {
+    pollInterval = setInterval(async () => {
+      if (currentStore && currentUser) {
+        await checkStoreWhatsAppStatus(currentStore.id);
+        await loadStoreStats(currentStore.id);
+        if (!document.getElementById('tab-livechat').classList.contains('hidden')) {
+          await loadLiveSessions(false);
+          if (selectedChatPhone) {
+            await loadActiveChatMessages(selectedChatPhone);
+          }
         }
       }
-    }
-  }, 2500);
-});
+    }, 2500);
+  }
+}
 
 // Navegação entre Abas
 function switchTab(tabId) {

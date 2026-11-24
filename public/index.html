@@ -149,10 +149,22 @@
 </nav>
     </div>
 
-    <!-- Rodapé Sidebar -->
-    <div class="p-4 border-t border-slate-800/80 text-[11px] text-slate-500 flex items-center justify-between">
-      <span>Multi-Tenancy 2.0</span>
-      <span class="inline-flex items-center gap-1 text-emerald-400"><i class="fas fa-circle text-[7px]"></i> Baileys Ready</span>
+    <!-- Rodapé Sidebar com Dados do Usuário Logado & Logout -->
+    <div class="p-3 border-t border-slate-800/80 bg-slate-950/80">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 overflow-hidden">
+          <div id="userAvatar" class="w-8 h-8 rounded-full bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+            AD
+          </div>
+          <div class="overflow-hidden">
+            <div id="userNameLabel" class="text-xs font-bold text-slate-200 truncate">Admin SaaS</div>
+            <div id="userRoleBadge" class="text-[10px] font-semibold text-emerald-400 truncate">👑 Administrador</div>
+          </div>
+        </div>
+        <button onclick="handleLogout()" title="Sair da Conta" class="p-2 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-900 transition">
+          <i class="fas fa-sign-out-alt text-xs"></i>
+        </button>
+      </div>
     </div>
   </aside>
 
@@ -817,6 +829,57 @@
 </div>
 
 </main>
+  </div>
+
+  <!-- TELA DE LOGIN / AUTENTICAÇÃO SAAS -->
+  <div id="loginScreen" class="fixed inset-0 bg-slate-950 z-[100] flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
+      
+      <!-- Cabeçalho Login -->
+      <div class="text-center space-y-2">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-2xl mx-auto shadow-lg shadow-emerald-500/30">
+          <i class="fab fa-whatsapp"></i>
+        </div>
+        <h2 class="text-xl font-extrabold text-white tracking-tight">AutoAtende PRO</h2>
+        <p class="text-xs text-slate-400">Faça login para acessar o painel de atendimento e agenda</p>
+      </div>
+
+      <!-- Formulário -->
+      <form onsubmit="handleLoginSubmit(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-slate-400 font-bold mb-1">E-mail</label>
+          <input type="email" id="loginEmail" placeholder="seu-email@empresa.com" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-emerald-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-slate-400 font-bold mb-1">Senha</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-emerald-500 focus:outline-none">
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold rounded-xl text-xs transition shadow-lg shadow-emerald-500/20">
+          Entrar no Sistema
+        </button>
+      </form>
+
+      <!-- Botões de Teste Rápido (1 Clique) -->
+      <div class="pt-4 border-t border-slate-800/80 space-y-2">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">💡 Acesso Rápido para Teste:</div>
+        <div class="grid grid-cols-1 gap-2 text-xs">
+          <button onclick="fillQuickLogin('admin@autoatende.com', 'admin123')" class="w-full p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left flex items-center justify-between text-slate-300 transition">
+            <span class="flex items-center gap-2"><i class="fas fa-crown text-amber-400"></i> <strong>Admin do SaaS</strong> (Dyego)</span>
+            <span class="text-[10px] text-slate-500">Acesso Total</span>
+          </button>
+          <button onclick="fillQuickLogin('secretaria@odontovida.com', 'senha123')" class="w-full p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left flex items-center justify-between text-slate-300 transition">
+            <span class="flex items-center gap-2"><i class="fas fa-stethoscope text-emerald-400"></i> <strong>Secretária</strong> (OdontoVida)</span>
+            <span class="text-[10px] text-slate-500">Só Clínica</span>
+          </button>
+          <button onclick="fillQuickLogin('atendente@diskbebidas.com', 'senha123')" class="w-full p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left flex items-center justify-between text-slate-300 transition">
+            <span class="flex items-center gap-2"><i class="fas fa-beer text-teal-400"></i> <strong>Atendente</strong> (Disk Bebidas)</span>
+            <span class="text-[10px] text-slate-500">Só Distribuidora</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <script src="/app.js"></script>

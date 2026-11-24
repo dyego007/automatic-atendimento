@@ -6,7 +6,9 @@ Sistema inteligente e modular de atendimento automatizado via **WhatsApp**, proj
 
 ## ✨ Principais Funcionalidades
 
-- 📅 **Gestão de Agendamentos & Clínica**: Agenda completa de consultas, cálculo automático de horários vagos, controle de status (*Confirmado, Pendente, Cancelado, Realizado*) e cadastro de horários de abertura, fechamento e almoço.
+- 🔒 **Sistema de Login & Controle de Acesso (RBAC)**: Autenticação com perfis separados: **Administrador do SaaS** (gerencia todas as lojas, clientes e nichos) e **Secretária/Atendente** (acesso restrito apenas à loja/clínica dele, sem ver dados de outros clientes).
+- 🎙️ **Compreensão de Áudios no WhatsApp**: Suporte nativo para mensagens de voz. O sistema transcreve o áudio do cliente (OpenAI Whisper ou Gemini 1.5 Flash) e a IA responde no contexto falado!
+- 📅 **Gestão de Agendamentos & Clínica**: Agenda completa de consultas estilo **Outlook / Teams**, cálculo automático de horários vagos, controle de status (*Confirmado, Pendente, Cancelado, Realizado*) e cadastro de horários de abertura, fechamento e almoço.
 - 🩺 **Catálogo de Procedimentos & Preços**: Cadastre serviços com valor, duração estimada e orientações. A IA consulta esse catálogo em tempo real para responder aos pacientes no WhatsApp.
 - 🏢 **Multi-Lojas / Multi-Comércios (Multi-Tenancy)**: Cadastre quantos comércios e clientes você quiser! Cada loja tem seu próprio número de WhatsApp, seu próprio QR Code isolado e seu catálogo de produtos e serviços.
 - 📲 **Conexão Real por QR Code (Baileys Multi-Instâncias)**: Escaneie o QR Code individual de cada loja pelo WhatsApp de cada aparelho (*Aparelhos Conectados*) para ativar o robô naquele número específico.

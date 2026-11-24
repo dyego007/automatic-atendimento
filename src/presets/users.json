@@ -1,0 +1,28 @@
+[
+  {
+    "id": "user-admin",
+    "name": "Administrador SaaS (Dyego)",
+    "email": "admin@autoatende.com",
+    "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+    "role": "admin",
+    "createdAt": "2026-11-24T13:24:22.540Z"
+  },
+  {
+    "id": "user-secretaria",
+    "name": "Camila (Secretária OdontoVida)",
+    "email": "secretaria@odontovida.com",
+    "password": "55a5e9e78207b4df8699d60886fa070079463547b095d1a05bc719bb4e6cd251",
+    "role": "operator",
+    "storeId": "loja-1",
+    "createdAt": "2026-11-24T13:24:22.540Z"
+  },
+  {
+    "id": "user-atendente",
+    "name": "Beto (Atendente Disk Bebidas)",
+    "email": "atendente@diskbebidas.com",
+    "password": "55a5e9e78207b4df8699d60886fa070079463547b095d1a05bc719bb4e6cd251",
+    "role": "operator",
+    "storeId": "loja-2",
+    "createdAt": "2026-11-24T13:24:22.540Z"
+  }
+]
