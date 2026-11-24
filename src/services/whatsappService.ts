@@ -6,6 +6,7 @@ import { storeService } from './storeService.js';
 export interface IncomingMessagePayload {
   storeId?: string;
   phone: string;
+  jid?: string;
   customerName?: string;
   text: string;
   source?: 'simulator' | 'evolution' | 'meta' | 'zapi' | 'baileys';
@@ -17,7 +18,7 @@ export class WhatsAppService {
     replyMessage?: ChatMessage;
     ignoredDueToHuman?: boolean;
   }> {
-    const { phone, customerName = 'Cliente WhatsApp', text } = payload;
+    const { phone, customerName = 'Cliente WhatsApp', text, jid } = payload;
     const cleanPhone = phone.replace(/\D/g, '');
 
     // Identifica qual loja/comércio está recebendo a mensagem
@@ -32,7 +33,7 @@ export class WhatsAppService {
       niche = nicheService.getActiveNiche();
     }
 
-    const session = sessionService.getOrCreateSession(targetStoreId, cleanPhone, customerName, niche.id);
+    const session = sessionService.getOrCreateSession(targetStoreId, cleanPhone, customerName, niche.id, jid);
 
     // Registra a mensagem do cliente na sessão da loja
     sessionService.addMessage(targetStoreId, cleanPhone, 'customer', text);
@@ -51,7 +52,9 @@ export class WhatsAppService {
       const transferNotice = `Transferindo você para a nossa equipe de atendimento humano da *${store.name}*. Em breve um de nossos consultores responderá aqui. 👨‍💻`;
       const reply = sessionService.addMessage(targetStoreId, cleanPhone, 'bot', transferNotice);
 
-      await this.dispatchExternalMessage(targetStoreId, cleanPhone, transferNotice);
+      if (payload.source !== 'baileys') {
+        await this.dispatchExternalMessage(targetStoreId, cleanPhone, transferNotice, jid);
+      }
       return {
         session,
         replyMessage: reply
@@ -62,8 +65,10 @@ export class WhatsAppService {
     const botReplyText = await aiService.generateReply(text, session.messages, niche);
     const reply = sessionService.addMessage(targetStoreId, cleanPhone, 'bot', botReplyText);
 
-    // Despacha mensagem de volta
-    await this.dispatchExternalMessage(targetStoreId, cleanPhone, botReplyText);
+    // Se a mensagem veio por outro canal (webhook externo), despacha
+    if (payload.source !== 'baileys') {
+      await this.dispatchExternalMessage(targetStoreId, cleanPhone, botReplyText, jid);
+    }
 
     return {
       session,
@@ -73,19 +78,20 @@ export class WhatsAppService {
 
   public async sendManualAgentMessage(storeId: string, phone: string, text: string): Promise<ChatMessage> {
     const cleanPhone = phone.replace(/\D/g, '');
+    const session = sessionService.getSession(storeId, cleanPhone);
     const message = sessionService.addMessage(storeId, cleanPhone, 'agent', text);
-    await this.dispatchExternalMessage(storeId, cleanPhone, text);
+    await this.dispatchExternalMessage(storeId, cleanPhone, text, session?.jid);
     return message;
   }
 
-  private async dispatchExternalMessage(storeId: string, phone: string, text: string): Promise<void> {
+  private async dispatchExternalMessage(storeId: string, phone: string, text: string, jid?: string): Promise<void> {
     // 1. Prioridade: Instância Baileys da própria loja
     try {
       const { baileysService } = await import('./baileysService.js');
-      const isSent = await baileysService.sendMessage(storeId, phone, text);
+      const isSent = await baileysService.sendMessage(storeId, phone, text, jid);
       if (isSent) return;
     } catch (err) {
-      // Ignora e tenta outros provedores
+      console.error('Erro ao despachar via Baileys:', err);
     }
 
     // 2. Provedores genéricos de webhook

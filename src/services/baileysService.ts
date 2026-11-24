@@ -30,6 +30,21 @@ export interface StoreWhatsAppInstance {
   qrCodeBase64: string | null;
   user: WhatsAppUserInfo | null;
   reconnectAttempts: number;
+  phoneToJid: Map<string, string>;
+}
+
+function extractMessageText(msg: any): string {
+  if (!msg || !msg.message) return '';
+  return (
+    msg.message.conversation ||
+    msg.message.extendedTextMessage?.text ||
+    msg.message.ephemeralMessage?.message?.extendedTextMessage?.text ||
+    msg.message.ephemeralMessage?.message?.conversation ||
+    msg.message.viewOnceMessage?.message?.extendedTextMessage?.text ||
+    msg.message.imageMessage?.caption ||
+    msg.message.videoMessage?.caption ||
+    ''
+  );
 }
 
 export class BaileysService {
@@ -49,7 +64,8 @@ export class BaileysService {
         status: 'disconnected',
         qrCodeBase64: null,
         user: null,
-        reconnectAttempts: 0
+        reconnectAttempts: 0,
+        phoneToJid: new Map()
       };
       this.instances.set(storeId, instance);
     }
@@ -137,7 +153,7 @@ export class BaileysService {
         instance.qrCodeBase64 = null;
         instance.user = null;
 
-        console.log(`⚠️ [Loja ${targetStoreId}] Conexão fechada. Reconectar: ${shouldReconnect}`);
+        console.log(`⚠️ [Loja ${targetStoreId}] Conexão fechada. Código: ${statusCode}. Reconectar: ${shouldReconnect}`);
 
         if (shouldReconnect) {
           instance.reconnectAttempts++;
@@ -183,45 +199,69 @@ export class BaileysService {
           continue;
         }
 
-        const phone = remoteJid.replace('@s.whatsapp.net', '');
-        const customerName = msg.pushName || 'Cliente';
-        const text =
-          msg.message.conversation ||
-          msg.message.extendedTextMessage?.text ||
-          msg.message.imageMessage?.caption ||
-          '';
-
+        const text = extractMessageText(msg);
         if (!text) continue;
 
-        console.log(`📩 [Loja ${targetStoreId}] Mensagem de ${customerName} (${phone}): "${text}"`);
+        // O remoteJid pode ser @s.whatsapp.net ou @lid (Linked ID)
+        const cleanPhone = remoteJid.replace(/@.*$/, '').replace(/\D/g, '') || remoteJid;
+        const customerName = msg.pushName || 'Cliente';
 
-        // Processa a mensagem pelo serviço de atendimento daquela loja
+        // Guarda o JID exato para responder sempre no canal correto
+        instance.phoneToJid.set(cleanPhone, remoteJid);
+
+        console.log(`📩 [Loja ${targetStoreId}] Mensagem de ${customerName} (${remoteJid}): "${text}"`);
+
+        // Processa a mensagem pelo serviço de atendimento
         const result = await whatsappService.handleIncomingMessage({
           storeId: targetStoreId,
-          phone,
+          phone: cleanPhone,
+          jid: remoteJid,
           customerName,
           text,
           source: 'baileys'
         });
 
-        // Se houver resposta gerada pela IA, envia pelo socket daquela loja
+        // Envia resposta automática pelo socket do Baileys
         if (result.replyMessage && instance.sock) {
-          await instance.sock.sendMessage(remoteJid, {
-            text: result.replyMessage.text
-          });
+          try {
+            console.log(`🤖 [Loja ${targetStoreId}] Enviando resposta para ${remoteJid}...`);
+            await instance.sock.sendPresenceUpdate('composing', remoteJid);
+            await new Promise(resolve => setTimeout(resolve, 600)); // Pequena pausa humanizada
+            await instance.sock.sendMessage(remoteJid, {
+              text: result.replyMessage.text
+            });
+            console.log(`✅ [Loja ${targetStoreId}] Resposta da IA enviada com sucesso para ${remoteJid}!`);
+          } catch (sendErr) {
+            console.error(`❌ [Loja ${targetStoreId}] Erro ao enviar mensagem no WhatsApp para ${remoteJid}:`, sendErr);
+          }
         }
       }
     });
   }
 
-  public async sendMessage(storeId: string, phone: string, text: string): Promise<boolean> {
+  public async sendMessage(storeId: string, phone: string, text: string, explicitJid?: string): Promise<boolean> {
     const instance = this.instances.get(storeId);
     if (!instance || !instance.sock || instance.status !== 'connected') {
+      console.warn(`[Loja ${storeId}] Não foi possível enviar: WhatsApp desconectado.`);
       return false;
     }
-    const jid = `${phone.replace(/\D/g, '')}@s.whatsapp.net`;
-    await instance.sock.sendMessage(jid, { text });
-    return true;
+
+    const cleanPhone = phone.replace(/\D/g, '');
+    const targetJid =
+      explicitJid ||
+      instance.phoneToJid.get(cleanPhone) ||
+      (phone.includes('@') ? phone : `${cleanPhone}@s.whatsapp.net`);
+
+    try {
+      console.log(`👤 [Loja ${storeId}] Enviando mensagem do atendente para ${targetJid}...`);
+      await instance.sock.sendPresenceUpdate('composing', targetJid);
+      await instance.sock.sendMessage(targetJid, { text });
+      console.log(`✅ [Loja ${storeId}] Mensagem entregue no WhatsApp para ${targetJid}!`);
+      return true;
+    } catch (err) {
+      console.error(`❌ [Loja ${storeId}] Erro ao enviar mensagem manual para ${targetJid}:`, err);
+      return false;
+    }
   }
 
   public async disconnect(storeId?: string): Promise<void> {

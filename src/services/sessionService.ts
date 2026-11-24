@@ -8,6 +8,7 @@ export interface ChatMessage {
 export interface ChatSession {
   storeId: string;
   phone: string;
+  jid?: string;
   customerName: string;
   nicheId: string;
   status: 'bot' | 'human' | 'finished';
@@ -24,7 +25,7 @@ export class SessionService {
     return `${storeId || 'default'}:${cleanPhone}`;
   }
 
-  public getOrCreateSession(storeId: string, phone: string, customerName = 'Cliente', nicheId = 'default'): ChatSession {
+  public getOrCreateSession(storeId: string, phone: string, customerName = 'Cliente', nicheId = 'default', jid?: string): ChatSession {
     const cleanPhone = phone.replace(/\D/g, '');
     const key = this.getSessionKey(storeId, cleanPhone);
     let session = this.sessions.get(key);
@@ -33,6 +34,7 @@ export class SessionService {
       session = {
         storeId: storeId || 'default',
         phone: cleanPhone,
+        jid,
         customerName,
         nicheId,
         status: 'bot',
@@ -40,6 +42,9 @@ export class SessionService {
         lastActivity: new Date().toISOString()
       };
       this.sessions.set(key, session);
+    } else {
+      if (jid) session.jid = jid;
+      if (customerName && customerName !== 'Cliente') session.customerName = customerName;
     }
 
     return session;
