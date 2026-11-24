@@ -84,3 +84,7 @@ O endpoint `POST /webhook/whatsapp` já está preparado para receber mensagens d
 `src/services/availabilityService.ts` controla os horários específicos de cada loja/data e a confirmação do dia e da reserva na conversa. Ele consulta e grava reservas pelo `appointmentService.ts` existente, preservando a gestão de consultas, serviços e horários semanais. A disponibilidade específica de uma data substitui a grade semanal; uma lista vazia fecha o dia. O fuso de avaliação é `America/Sao_Paulo`.
 
 `GET/PUT /api/stores/:id/agenda` consulta e salva a disponibilidade diária. `GET /api/slots` usa a mesma disponibilidade do bot. O painel diário está em `public/agenda.js`, integrado à navegação existente. O transbordo humano continua sendo avaliado antes do fluxo de agenda. Os testes isolam as reservas com um backend em memória e não criam consultas reais.
+
+## Identidade visual e temas
+
+O painel mantém os componentes e eventos existentes em `public/index.html` e `public/app.js`. `public/theme.css` concentra as cores, o layout responsivo e os ajustes do calendário. `public/theme.js` aplica o tema claro por padrão antes da primeira pintura, salva a escolha claro/escuro em `localStorage` e controla a navegação compacta. Falhas de armazenamento não impedem o uso do painel. A marca vetorial e o favicon usam `public/logo.svg`. Nenhuma dependência foi adicionada.

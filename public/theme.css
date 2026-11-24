@@ -1,0 +1,101 @@
+/* AutoAtende: shared visual tokens for existing and dynamically rendered views. */
+:root{color-scheme:light;--canvas:#f3f6f6;--surface:#fff;--soft:#f1f5f5;--raised:#e7eeee;--line:#dce5e5;--ink:#172f35;--muted:#536b72;--subtle:#647b81;--accent:#0f766e;--accent-soft:#e1f3ee;--shadow:0 5px 24px #133c3810;--danger:#be3451;--warning:#946000;--info:#4f46b4}
+:root[data-theme="dark"]{color-scheme:dark;--canvas:#101d24;--surface:#16272f;--soft:#1c3039;--raised:#263e47;--line:#304750;--ink:#edf5f5;--muted:#b0c5cc;--subtle:#91aab4;--accent:#5ee4be;--accent-soft:#163e38;--shadow:0 5px 24px #0002;--danger:#fda4af;--warning:#fcd370;--info:#b9b4ff}
+body.app-shell{background:var(--canvas);color:var(--ink);font-size:14px;line-height:1.6}
+.app-shell>.app-content{background:var(--canvas);min-width:0}
+.app-shell [class~="bg-slate-950"]{background-color:var(--surface)!important}
+.app-shell [class~="bg-slate-900"],.app-shell [class~="bg-slate-900/50"],.app-shell [class~="bg-slate-900/60"]{background-color:var(--soft)!important}
+.app-shell [class~="bg-slate-800"],.app-shell [class~="bg-slate-700"]{background-color:var(--raised)!important}
+.app-shell [class~="text-white"],.app-shell [class~="text-slate-100"],.app-shell [class~="text-slate-200"]{color:var(--ink)!important}
+.app-shell [class~="text-slate-300"],.app-shell [class~="text-slate-400"]{color:var(--muted)!important}
+.app-shell [class~="text-slate-500"]{color:var(--subtle)!important}
+.app-shell [class~="border-slate-800"],.app-shell [class~="border-slate-800/80"],.app-shell [class~="border-slate-700"],.app-shell [class~="border-slate-700/80"],.app-shell [class~="divide-slate-800/60"]>*+*{border-color:var(--line)!important}
+.app-shell [class~="text-emerald-400"],.app-shell [class~="text-emerald-300"],.app-shell [class~="text-teal-400"]{color:var(--accent)!important}
+.app-shell [class~="text-rose-400"]{color:var(--danger)!important}
+.app-shell [class~="text-amber-400"]{color:var(--warning)!important}
+.app-shell [class~="text-indigo-400"]{color:var(--info)!important}
+.app-shell [class~="bg-emerald-500/10"],.app-shell [class~="bg-emerald-500/20"]{background:var(--accent-soft)!important}
+.app-shell [class~="bg-emerald-500"]{background:#0f766e!important;color:#fff!important;box-shadow:0 3px 8px #0f766e18}
+.app-shell [class~="bg-emerald-500"]:hover{background:#115e59!important}
+.app-shell [class~="bg-indigo-600"],.app-shell [class~="bg-indigo-500"]{color:#fff!important}
+.app-shell [class~="hover:bg-slate-900"]:hover,.app-shell [class~="hover:bg-slate-800"]:hover,.app-shell [class~="hover:bg-slate-700"]:hover{background:var(--raised)!important}
+.app-shell [class~="shadow-2xl"],.app-shell [class~="shadow-xl"],.app-shell [class~="shadow-lg"]{box-shadow:var(--shadow)}
+.app-shell .text-xs{font-size:13px;line-height:1.65}
+.app-shell button{min-height:36px;transition:background-color .15s,color .15s,box-shadow .15s;cursor:pointer}
+.app-shell button:disabled{cursor:wait;opacity:.55}
+.app-shell :is(button,a,input,select,textarea):focus-visible{outline:3px solid #14b8a6;outline-offset:3px}
+.app-shell :is(input,select,textarea){accent-color:#0f766e}
+.app-shell :is(input,select,textarea):not([type="checkbox"]){min-width:0;line-height:1.5}
+.app-shell input::placeholder,.app-shell textarea::placeholder{color:var(--subtle);opacity:1}
+.app-shell textarea{resize:vertical}
+.app-sidebar{width:260px;position:sticky;top:0;height:100dvh;overflow-y:auto;background:var(--surface)!important;border-color:var(--line)!important;z-index:45;padding:10px 0}
+.brand{display:flex;align-items:center;gap:12px;padding:22px 24px 24px;border-bottom:1px solid var(--line)}
+.brand img{width:44px;height:44px;flex:none}
+.brand-name{font-weight:800;font-size:21px;letter-spacing:-.8px;color:var(--ink)}
+.brand-caption{color:var(--muted);font-size:11px;letter-spacing:.04em}
+.nav-caption{font-size:10px;font-weight:800;letter-spacing:.16em;color:var(--subtle);padding:16px 16px 10px;text-transform:uppercase}
+.app-sidebar nav button{font-size:13px;min-height:46px;border:1px solid transparent;gap:12px;margin-bottom:5px;text-align:left}
+.app-sidebar nav button i{width:19px;text-align:center;font-size:16px}
+.app-sidebar nav button[aria-current="page"]{background:var(--accent-soft)!important;color:var(--accent)!important;border-color:transparent!important;box-shadow:inset 3px 0 var(--accent);font-weight:800}
+.sidebar-footer{display:flex;gap:8px;align-items:center;padding:22px;color:var(--subtle);font-size:11px;border-top:1px solid var(--line)}
+.app-topbar{background:var(--surface)!important;border-color:var(--line)!important;min-height:88px;height:auto;padding:18px 32px;gap:20px;flex-wrap:wrap}
+#pageTitle{color:var(--ink)!important;text-transform:none;letter-spacing:-.5px;font-size:19px;line-height:1.4}
+.topbar-eyebrow{color:var(--subtle);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:3px}
+.topbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+#topStoreSelect{max-width:250px;text-overflow:ellipsis}
+.theme-toggle,.menu-toggle{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:9px 12px;color:var(--ink);font-size:12px;font-weight:700}
+.menu-toggle{display:none}
+.app-shell main{padding:30px 32px;max-width:1600px}
+.app-shell main h3{letter-spacing:-.4px}
+.app-shell main [class~="rounded-2xl"]{border-radius:18px}
+#tab-dashboard>div:first-child{background:var(--accent-soft)!important;background-image:none!important;border-color:var(--line)!important;padding:26px 28px}
+#dashBannerStoreName{font-size:26px;letter-spacing:-.8px;line-height:1.3}
+#dashNicheDesc{line-height:1.8}
+#statTotal,#statBot,#statHuman,#statMessages{font-size:32px;letter-spacing:-1px;font-variant-numeric:tabular-nums;margin-top:10px;margin-bottom:5px}
+#storesGrid>div{box-shadow:var(--shadow);padding:24px}
+#storesGrid>div:hover{border-color:var(--accent)!important}
+#qrCodeContainer{box-shadow:none!important;border:1px dashed #bacdcc;border-radius:16px;background:#fff!important}
+#qrCodeContainer .text-slate-300{color:#91a5ad!important}
+#qrCodeContainer .text-slate-500{color:#536b72!important}
+#tab-agenda>div{max-width:1000px;margin:auto;padding:32px;box-shadow:var(--shadow)}
+#agendaAvailable{background:var(--accent-soft);color:var(--accent)!important;padding:18px;border-radius:12px;font-weight:700;line-height:1.9}
+#agendaBookings li{padding:12px 16px;background:var(--soft);border-radius:10px}
+#agendaTimes{font-variant-numeric:tabular-nums;letter-spacing:.03em}
+.app-shell .fc{--fc-border-color:var(--line);--fc-page-bg-color:var(--surface);--fc-neutral-bg-color:var(--soft);--fc-list-event-hover-bg-color:var(--soft);--fc-today-bg-color:var(--accent-soft);color:var(--ink)}
+.app-shell .fc-theme-standard td,.app-shell .fc-theme-standard th,.app-shell .fc-timegrid-slot{border-color:var(--line)!important}
+.app-shell .fc-col-header-cell{background:var(--soft)!important}
+.app-shell .fc-col-header-cell-cushion{color:var(--ink)!important;padding:12px 4px!important}
+.app-shell .fc-timegrid-slot-label-cushion{color:var(--muted)!important}
+.app-shell .fc-day-today{background:var(--accent-soft)!important}
+.app-shell .fc-list-day-cushion{background:var(--soft)!important}
+.app-shell .fc-event{box-shadow:none!important}
+.app-shell .fc-event-main,.app-shell .fc-event-main *{color:#fff!important}
+.app-shell .fc-daygrid-day-number{color:var(--ink)}
+.app-shell .fc-scrollgrid{border-radius:12px;overflow:hidden}
+.app-shell [id$="Modal"]{overflow-y:auto}
+.app-shell [id$="Modal"]>div{max-height:calc(100dvh - 32px);overflow-y:auto}
+/* Preserve the familiar WhatsApp simulator colors in both themes. */
+#tab-simulator [class~="bg-[#075e54]"] :is(.text-white,.text-slate-200),#tab-simulator [class~="bg-[#075e54]"]{color:#fff!important}
+#tab-simulator [class~="bg-[#00a884]"]{color:#fff!important}
+#simInput{color:#1e293b!important;background:#fff!important}
+#tab-livechat [class~="bg-[#0b141a]"]{background:var(--surface)!important;min-width:0}
+#tab-livechat [class~="bg-[#202c33]"]{background:var(--soft)!important}
+#agentInputText{background:var(--surface)!important;color:var(--ink)!important}
+#liveChatMessages,#simMessagesContainer{color:#243b43;color-scheme:light}
+#liveChatMessages .text-slate-500,#simMessagesContainer .text-slate-500{color:#64748b!important}
+.custom-scroll{scrollbar-width:thin;scrollbar-color:#91aab460 transparent}
+.skip-link{position:fixed;left:16px;top:-100px;z-index:100;padding:12px 20px;background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:10px}
+.skip-link:focus{top:12px}
+@media(min-width:768px) and (max-width:1150px){.app-sidebar{width:228px}.app-topbar{padding:18px 24px}.app-shell main{padding:24px}.topbar-actions{width:100%}}
+@media(max-width:767px){.app-shell{display:flex;flex-direction:column}.app-sidebar{width:100%;height:auto;position:relative;padding:0}.brand{padding:16px 20px}.app-sidebar>div:first-child>div:not(.brand),.sidebar-footer{display:none}.app-sidebar nav{display:none;padding:12px}.app-sidebar.menu-open nav{display:block}.app-topbar{position:sticky;top:0;min-height:76px;padding:14px 16px;gap:12px}.menu-toggle{display:inline-flex}.topbar-actions{gap:8px;width:100%}#pageTitle{font-size:16px}.topbar-eyebrow{display:none}#topStoreSelect{max-width:190px}.app-shell main{padding:18px 14px}.app-shell main .p-6{padding:20px}#dashBannerStoreName{font-size:22px}#tab-agenda>div{padding:20px}#tab-appointments>div:first-child>div{flex-wrap:wrap;min-width:0}#tab-appointments>div:first-child>div>div{flex-wrap:wrap}#calendar{min-width:600px}#tab-appointments>div:nth-child(2){overflow-x:auto;padding:10px}#tab-livechat>div{height:780px}#tab-livechat>div>div:first-child{max-height:230px;min-height:120px}.app-shell [id$="Modal"]{padding:12px}.app-shell [id$="Modal"]>div{padding:20px}.app-shell #storesGrid>div{grid-column:auto}}
+@media(prefers-reduced-motion:reduce){.app-shell *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Keep shell geometry above utility CSS, including when Tailwind loads later. */
+body.app-shell .app-topbar{height:auto;min-height:88px;flex-shrink:0}
+body.app-shell .app-sidebar{width:260px}
+body.app-shell .brand-caption{font-size:12px;line-height:1.5}
+#liveChatMessages .text-slate-400,#simMessagesContainer .text-slate-400{color:#64748b!important}
+@media(min-width:1024px) and (max-width:1150px){body.app-shell .app-sidebar{width:228px}}
+@media(max-width:1023px){body.app-shell{flex-direction:column}body.app-shell .app-sidebar{width:100%;height:auto;position:relative;padding:0;overflow:visible}.brand{padding:16px 20px}.app-sidebar>div:first-child>div:not(.brand),.sidebar-footer{display:none}.app-sidebar nav{display:none;padding:12px}.app-sidebar.menu-open nav{display:block}.app-shell .menu-toggle{display:inline-flex}.app-shell .app-topbar{position:sticky;top:0;padding:14px 16px;gap:12px}.topbar-actions{width:100%;gap:8px}.app-shell main{padding:18px 16px}#pageTitle{font-size:17px}.topbar-eyebrow{display:none}}
+
+#loginScreen{overflow-y:auto;background:var(--canvas)!important}#loginScreen>div{margin:auto;background:var(--surface)!important;box-shadow:var(--shadow)}.app-shell [class~="bg-slate-950/80"]{background:var(--surface)!important}

@@ -2,6 +2,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+<meta name="theme-color" content="#f3f6f6">
+<script src="/theme.js"></script>
+<link rel="icon" type="image/svg+xml" href="/logo.svg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AutoAtendimento AI — Multi-Lojas & WhatsApp</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -93,25 +96,15 @@
       background: #94a3b8;
     }
   </style>
+<link rel="stylesheet" href="/theme.css">
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col md:flex-row">
+<body class="app-shell bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col md:flex-row">
 
+<a href="#mainContent" class="skip-link">Pular para o conteúdo</a>
   <!-- SIDEBAR LATERAL -->
-  <aside class="w-full md:w-64 bg-slate-950 border-r border-slate-800/80 flex flex-col justify-between shrink-0">
+  <aside id="appSidebar" class="app-sidebar w-full md:w-64 bg-slate-950 border-r border-slate-800/80 flex flex-col justify-between shrink-0">
     <div>
-      <!-- Logo & Título -->
-      <div class="p-5 border-b border-slate-800/80 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 text-lg font-black">
-          <i class="fab fa-whatsapp"></i>
-        </div>
-        <div>
-          <h1 class="text-sm font-extrabold tracking-tight text-white flex items-center gap-1.5">
-            AutoAtende <span class="bg-emerald-500/20 text-emerald-400 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">MULTI-LOJAS</span>
-          </h1>
-          <p class="text-[11px] text-slate-400">Gestão de Múltiplos Comércios</p>
-        </div>
-      </div>
-
+<div class="brand"><img src="/logo.svg" alt="" width="44" height="44"><div><h1 class="brand-name">AutoAtende<span style="color:var(--accent)">.</span></h1><p class="brand-caption">Conversas que conectam.</p></div></div>
       <!-- Status da Loja Selecionada -->
       <div class="p-4 mx-3 my-4 rounded-xl bg-slate-900 border border-slate-800">
         <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Loja em Foco:</div>
@@ -125,9 +118,9 @@
       </div>
 
       <!-- Links de Navegação -->
-      <nav class="px-3 space-y-1">
+      <nav id="mainNavigation" aria-label="Navegação principal" class="px-3 space-y-1"><p class="nav-caption">Seu espaço de trabalho</p>
         <button onclick="switchTab('stores')" id="navBtn-stores" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
-          <i class="fas fa-store text-sm w-4"></i> Minhas Lojas / Clientes
+          <i class="fas fa-store text-sm w-4"></i> Lojas e clientes
         </button>
         <button onclick="switchTab('dashboard')" id="navBtn-dashboard" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 transition-all">
           <i class="fas fa-qrcode text-sm w-4"></i> Conexão QR Code
@@ -137,7 +130,7 @@
           <span id="unreadBadge" class="ml-auto bg-emerald-500 text-slate-950 text-[10px] font-bold px-1.5 py-0.2 rounded-full hidden">0</span>
         </button>
         <button onclick="switchTab('appointments')" id="navBtn-appointments" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
-          <i class="fas fa-calendar-check text-sm w-4"></i> Agendamentos & Horários
+          <i class="fas fa-calendar-check text-sm w-4"></i> Agendamentos
         </button>
         <button onclick="switchTab('simulator')" id="navBtn-simulator" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
           <i class="fas fa-mobile-alt text-sm w-4"></i> Simulador Virtual
@@ -148,6 +141,7 @@
       <button id="navBtn-agenda" onclick="switchTab('agenda')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all"><i class="fas fa-calendar-alt"></i> Disponibilidade por dia</button>
 </nav>
     </div>
+
 
     <!-- Rodapé Sidebar com Dados do Usuário Logado & Logout -->
     <div class="p-3 border-t border-slate-800/80 bg-slate-950/80">
@@ -166,21 +160,22 @@
         </button>
       </div>
     </div>
+
   </aside>
 
   <!-- ÁREA DE CONTEÚDO PRINCIPAL -->
-  <div class="flex-1 flex flex-col min-h-screen bg-slate-900">
+  <div class="app-content flex-1 flex flex-col min-h-screen bg-slate-900">
 
     <!-- TOPBAR -->
-    <header class="h-16 border-b border-slate-800 bg-slate-950/60 backdrop-blur px-6 flex items-center justify-between gap-4 sticky top-0 z-40">
+    <header class="app-topbar h-16 border-b border-slate-800 bg-slate-950/60 backdrop-blur px-6 flex items-center justify-between gap-4 sticky top-0 z-40">
       <div class="flex items-center gap-4">
-        <h2 id="pageTitle" class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+        <button type="button" id="menuToggle" class="menu-toggle" aria-label="Abrir navegação" aria-controls="mainNavigation" aria-expanded="false"><i class="fas fa-bars" aria-hidden="true"></i></button><div><p class="topbar-eyebrow">Painel de atendimento</p><h2 id="pageTitle" class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
           <i class="fas fa-qrcode text-emerald-400"></i> Conexão QR Code & Visão Geral
-        </h2>
+        </h2></div>
       </div>
 
       <!-- Seletor Rápido de Loja / Cliente no Topo -->
-      <div class="flex items-center gap-3">
+      <div class="topbar-actions"><button type="button" id="themeToggle" data-theme-toggle class="theme-toggle" aria-label="Ativar tema escuro" aria-pressed="false"><i class="fas fa-moon" aria-hidden="true"></i><span>Tema escuro</span></button>
         <div class="flex items-center bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-1.5 shadow-sm">
           <span class="text-xs text-slate-400 mr-2 flex items-center gap-1.5 font-medium">
             <i class="fas fa-building text-emerald-400"></i> Loja Ativa:
@@ -196,7 +191,7 @@
     </header>
 
     <!-- CORPO DAS ABAS -->
-    <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+    <main id="mainContent" tabindex="-1" class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
 
       <!-- ========================================== -->
       <!-- ABA 0: MINHAS LOJAS / CLIENTES (MULTI-TENANT) -->
@@ -835,15 +830,7 @@
   <div id="loginScreen" class="fixed inset-0 bg-slate-950 z-[100] flex items-center justify-center p-4">
     <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
       
-      <!-- Cabeçalho Login -->
-      <div class="text-center space-y-2">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-2xl mx-auto shadow-lg shadow-emerald-500/30">
-          <i class="fab fa-whatsapp"></i>
-        </div>
-        <h2 class="text-xl font-extrabold text-white tracking-tight">AutoAtende PRO</h2>
-        <p class="text-xs text-slate-400">Faça login para acessar o painel de atendimento e agenda</p>
-      </div>
-
+<div class="text-center space-y-2"><img src="/logo.svg" width="60" height="60" alt="" class="mx-auto"><h2 class="text-xl font-extrabold text-white tracking-tight">AutoAtende<span style="color:var(--accent)">.</span></h2><p class="text-xs text-slate-400">Entre para cuidar das suas conversas e agendamentos.</p><button type="button" data-theme-toggle class="theme-toggle" aria-label="Ativar tema escuro" aria-pressed="false"><i class="fas fa-moon" aria-hidden="true"></i><span>Tema escuro</span></button></div>
       <!-- Formulário -->
       <form onsubmit="handleLoginSubmit(event)" class="space-y-4 text-xs">
         <div>
