@@ -6,7 +6,7 @@ export interface IncomingMessagePayload {
   phone: string;
   customerName?: string;
   text: string;
-  source?: 'simulator' | 'evolution' | 'meta' | 'zapi';
+  source?: 'simulator' | 'evolution' | 'meta' | 'zapi' | 'baileys';
 }
 
 export class WhatsAppService {
@@ -66,6 +66,17 @@ export class WhatsAppService {
   }
 
   private async dispatchExternalMessage(phone: string, text: string): Promise<void> {
+    // 1. Prioridade: Conexão direta nativa Baileys (QR Code)
+    try {
+      const { baileysService } = await import('./baileysService.js');
+      if (baileysService.getStatus().status === 'connected') {
+        await baileysService.sendMessage(phone, text);
+        return;
+      }
+    } catch (err) {
+      // Ignora e tenta outros provedores se houver
+    }
+
     const provider = process.env.WHATSAPP_PROVIDER || 'simulator';
 
     if (provider === 'evolution' && process.env.EVOLUTION_API_URL && process.env.EVOLUTION_API_KEY) {

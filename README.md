@@ -6,13 +6,15 @@ Sistema inteligente e modular de atendimento automatizado via **WhatsApp**, proj
 
 ## ✨ Principais Funcionalidades
 
+- 📲 **Conexão Real por QR Code (Baileys Nativo)**: Escaneie o QR Code na tela pelo aplicativo do WhatsApp do seu celular (*Aparelhos Conectados*) e comece a atender contatos reais imediatamente!
+- 📊 **Painel SaaS Moderno & Intuitivo**: Dashboard profissional com métricas em tempo real, status da conexão, conversas ativas e transbordo.
+- 💬 **Live Chat (Estilo WhatsApp Web)**: Visualize todas as conversas recebidas pelo robô e assuma o atendimento humano com 1 clique quando necessário.
 - 🔄 **Multi-Nicho Instantâneo**: Alterne entre **Dentista**, **Distribuidora**, **Imobiliária** ou crie seu próprio nicho com 1 clique.
-- 📱 **Simulador Web de WhatsApp Embutido**: Teste o comportamento do robô diretamente no seu navegador em uma interface idêntica ao WhatsApp, sem precisar de chip ou QR Code!
+- 📱 **Simulador Web Embutido**: Teste o comportamento do robô diretamente no seu navegador, sem precisar de celular.
 - 🧠 **Motor de IA Flexível**:
   - Funciona imediatamente em modo **Offline/Mock Inteligente** (sem custo e sem necessidade de chaves de API).
   - Suporte nativo para **OpenAI** (GPT-4o-mini) e **Google Gemini**.
-- 👨‍💻 **Transbordo para Atendente Humano**: Se o cliente pedir para falar com uma pessoa, a IA transfere e pausa o bot automaticamente.
-- 🔌 **Pronto para WhatsApp Real**: Endpoint de Webhook unificado compatível com **Evolution API**, **Z-API** e **WhatsApp Cloud API**.
+- 🔌 **Compatibilidade Híbrida**: Além da conexão direta via QR Code, também suporta Webhooks da **Evolution API**, **Z-API** e **WhatsApp Cloud API**.
 
 ---
 

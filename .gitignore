@@ -29,3 +29,8 @@ env/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Sessões e Tokens do WhatsApp (Baileys)
+data/
+auth_info/
+*.session

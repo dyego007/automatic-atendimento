@@ -2,8 +2,51 @@ import { Router } from 'express';
 import { nicheService } from '../services/nicheService.js';
 import { sessionService } from '../services/sessionService.js';
 import { whatsappService } from '../services/whatsappService.js';
+import { baileysService } from '../services/baileysService.js';
 
 export const apiRouter = Router();
+
+// --- Rotas de Conexão WhatsApp Real via QR Code (Baileys) ---
+apiRouter.get('/whatsapp/status', (req, res) => {
+  const status = baileysService.getStatus();
+  res.json(status);
+});
+
+apiRouter.post('/whatsapp/connect', async (req, res) => {
+  try {
+    await baileysService.connect();
+    const status = baileysService.getStatus();
+    res.json({ message: 'Conexão iniciada. Escaneie o QR Code no WhatsApp.', status });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+apiRouter.post('/whatsapp/disconnect', async (req, res) => {
+  try {
+    await baileysService.disconnect();
+    res.json({ message: 'WhatsApp desconectado com sucesso.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Métricas e Estatísticas do Sistema ---
+apiRouter.get('/stats', (req, res) => {
+  const sessions = sessionService.listSessions();
+  const total = sessions.length;
+  const botCount = sessions.filter(s => s.status === 'bot').length;
+  const humanCount = sessions.filter(s => s.status === 'human').length;
+  const totalMessages = sessions.reduce((acc, s) => acc + s.messages.length, 0);
+
+  res.json({
+    totalSessions: total,
+    botActive: botCount,
+    humanTakeover: humanCount,
+    totalMessages,
+    whatsappStatus: baileysService.getStatus().status
+  });
+});
 
 // --- Rotas de Nichos ---
 apiRouter.get('/niches', (req, res) => {
