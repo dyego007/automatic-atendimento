@@ -637,98 +637,158 @@ async function clearSimChat() {
 }
 
 // -------------------------------------------------------------
-// MÓDULO DE AGENDAMENTOS, HORÁRIOS & SERVIÇOS (CLÍNICA)
+// MÓDULO DE AGENDAMENTOS, HORÁRIOS & CALENDÁRIO (ESTILO OUTLOOK)
 // -------------------------------------------------------------
+let fullCalendarInstance = null;
+let activeModalApt = null;
+
 async function loadAppointmentsPage() {
-  setFilterDateToday();
-  await loadAppointments();
   await loadServices();
   await loadSchedule();
+  await initOrUpdateCalendar();
 }
 
-function setFilterDateToday() {
-  const today = new Date().toISOString().split('T')[0];
-  const input = document.getElementById('appointmentDateFilter');
-  if (input) input.value = today;
-  loadAppointments();
-}
+async function initOrUpdateCalendar() {
+  const calendarEl = document.getElementById('calendar');
+  if (!calendarEl) return;
 
-async function loadAppointments() {
-  if (!currentStore) return;
-  const date = document.getElementById('appointmentDateFilter')?.value;
-  try {
-    const url = date ? `/api/appointments?storeId=${currentStore.id}&date=${date}` : `/api/appointments?storeId=${currentStore.id}`;
-    const res = await fetch(url);
-    const list = await res.json();
-    const container = document.getElementById('appointmentsList');
-    const badge = document.getElementById('appointmentCountBadge');
-
-    badge.textContent = `${list.length} consulta${list.length === 1 ? '' : 's'}`;
-
-    if (!list || list.length === 0) {
-      container.innerHTML = `
-        <div class="text-center py-10 text-slate-500 text-xs">
-          <i class="fas fa-calendar-day text-3xl mb-2 text-slate-600 block"></i>
-          Nenhuma consulta agendada para este dia nesta clínica.
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = '';
-    list.forEach(a => {
-      const card = document.createElement('div');
-      card.className = 'bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:border-slate-700 transition';
-
-      let statusBadge = '';
-      if (a.status === 'confirmed') {
-        statusBadge = '<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full">Confirmado</span>';
-      } else if (a.status === 'pending') {
-        statusBadge = '<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full">Pendente</span>';
-      } else if (a.status === 'cancelled') {
-        statusBadge = '<span class="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full">Cancelado</span>';
-      } else {
-        statusBadge = '<span class="bg-teal-500/10 text-teal-400 border border-teal-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full">Realizado</span>';
+  if (!fullCalendarInstance) {
+    fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'timeGridWeek',
+      headerToolbar: false, // Controlado pela nossa barra superior estilo Outlook
+      slotMinTime: '07:00:00',
+      slotMaxTime: '20:00:00',
+      slotDuration: '00:30:00',
+      allDaySlot: false,
+      locale: 'pt-br',
+      nowIndicator: true,
+      height: 680,
+      selectable: true,
+      selectMirror: true,
+      weekends: true,
+      slotLabelFormat: {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      },
+      dayHeaderFormat: {
+        weekday: 'short',
+        day: 'numeric',
+        omitCommas: true
+      },
+      dateClick: function(info) {
+        // Ao clicar em qualquer slot vazio -> abre o modal de agendar naquele horário
+        openNewAppointmentModal(info.dateStr);
+      },
+      eventClick: function(info) {
+        // Ao clicar em uma consulta marcada -> abre detalhes do paciente
+        openAppointmentDetailModal(info.event.extendedProps);
+      },
+      datesSet: function(info) {
+        updateCalendarPeriodTitle(info.view);
       }
-
-      card.innerHTML = `
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex flex-col items-center justify-center shrink-0">
-            <span class="text-xs font-black text-emerald-400 font-mono">${a.time}</span>
-            <span class="text-[9px] text-slate-400 uppercase">${a.date.split('-').slice(1).reverse().join('/')}</span>
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h5 class="text-xs font-bold text-white">${a.customerName}</h5>
-              ${statusBadge}
-            </div>
-            <p class="text-[11px] text-emerald-300 font-medium mt-0.5">${a.serviceName}</p>
-            <div class="text-[10px] text-slate-400 flex items-center gap-3 mt-1">
-              <span><i class="fab fa-whatsapp text-emerald-400 mr-1"></i>+${a.customerPhone}</span>
-              ${a.notes ? `<span><i class="fas fa-sticky-note text-amber-400 mr-1"></i>${a.notes}</span>` : ''}
-            </div>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-1.5 self-end sm:self-center">
-          ${a.status !== 'confirmed' ? `<button onclick="updateAppointmentStatus('${a.id}', 'confirmed')" title="Confirmar" class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-xs font-semibold">Confirmar</button>` : ''}
-          ${a.status !== 'cancelled' ? `<button onclick="updateAppointmentStatus('${a.id}', 'cancelled')" title="Cancelar" class="px-2.5 py-1 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 rounded-lg text-xs font-semibold">Cancelar</button>` : ''}
-          <button onclick="deleteAppointment('${a.id}')" title="Excluir" class="p-1.5 text-slate-500 hover:text-rose-400 rounded-lg transition"><i class="fas fa-trash-alt text-xs"></i></button>
-        </div>
-      `;
-      container.appendChild(card);
     });
-  } catch (err) {
-    console.error('Erro ao buscar agendamentos:', err);
+
+    fullCalendarInstance.render();
+  }
+
+  await loadAppointmentsToCalendar();
+  setTimeout(() => {
+    fullCalendarInstance.updateSize();
+  }, 100);
+}
+
+function updateCalendarPeriodTitle(view) {
+  const titleEl = document.getElementById('calPeriodTitle');
+  if (titleEl && view) {
+    titleEl.textContent = view.title;
   }
 }
 
-async function openNewAppointmentModal() {
-  const card = document.getElementById('newAppointmentCard');
-  card.classList.remove('hidden');
+function calNavigate(action) {
+  if (!fullCalendarInstance) return;
+  if (action === 'today') fullCalendarInstance.today();
+  if (action === 'prev') fullCalendarInstance.prev();
+  if (action === 'next') fullCalendarInstance.next();
+}
 
+function calChangeView(viewName) {
+  if (!fullCalendarInstance) return;
+  fullCalendarInstance.changeView(viewName);
+
+  const views = ['week', 'day', 'month', 'list'];
+  const viewMap = {
+    timeGridWeek: 'week',
+    timeGridDay: 'day',
+    dayGridMonth: 'month',
+    listWeek: 'list'
+  };
+
+  const activeKey = viewMap[viewName];
+  views.forEach(v => {
+    const btn = document.getElementById(`btnView-${v}`);
+    if (v === activeKey) {
+      btn.className = 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition shadow-sm';
+    } else {
+      btn.className = 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition';
+    }
+  });
+}
+
+async function loadAppointmentsToCalendar() {
+  if (!currentStore || !fullCalendarInstance) return;
+  try {
+    const res = await fetch(`/api/appointments?storeId=${currentStore.id}`);
+    const list = await res.json();
+
+    const events = list.map(a => {
+      const startDateTime = `${a.date}T${a.time}:00`;
+      
+      // Cores por status (Roxo / Indigo estilo Outlook para Confirmado)
+      let bgColor = '#4f46e5'; // Indigo
+      let borderColor = '#6366f1';
+      if (a.status === 'confirmed') {
+        bgColor = '#4338ca'; // Roxo/Azul do Outlook
+        borderColor = '#6366f1';
+      } else if (a.status === 'pending') {
+        bgColor = '#d97706'; // Âmbar
+        borderColor = '#f59e0b';
+      } else if (a.status === 'completed') {
+        bgColor = '#059669'; // Esmeralda
+        borderColor = '#10b981';
+      } else if (a.status === 'cancelled') {
+        bgColor = '#dc2626'; // Vermelho
+        borderColor = '#ef4444';
+      }
+
+      return {
+        id: a.id,
+        title: `${a.customerName} — ${a.serviceName}`,
+        start: startDateTime,
+        backgroundColor: bgColor,
+        borderColor: borderColor,
+        textColor: '#ffffff',
+        extendedProps: a
+      };
+    });
+
+    fullCalendarInstance.removeAllEvents();
+    fullCalendarInstance.addEventSource(events);
+  } catch (err) {
+    console.error('Erro ao carregar eventos no calendário:', err);
+  }
+}
+
+// -------------------------------------------------------------
+// MODAIS DE AGENDAMENTO (DETALHES & NOVO)
+// -------------------------------------------------------------
+async function openNewAppointmentModal(dateStr) {
+  const modal = document.getElementById('newAppointmentModal');
+  modal.classList.remove('hidden');
+
+  // Preenche serviços da clínica
   const select = document.getElementById('aptServiceSelect');
-  select.innerHTML = '<option value="">Selecione o Serviço...</option>';
+  select.innerHTML = '<option value="">Selecione o Procedimento...</option>';
 
   try {
     const res = await fetch(`/api/services?storeId=${currentStore.id}`);
@@ -743,9 +803,23 @@ async function openNewAppointmentModal() {
     console.error(e);
   }
 
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('aptDate').value = today;
-  document.getElementById('aptTime').value = '09:00';
+  if (dateStr) {
+    // Ex: "2026-11-24T10:00:00" ou "2026-11-24"
+    const parts = dateStr.split('T');
+    document.getElementById('aptDate').value = parts[0];
+    if (parts[1]) {
+      document.getElementById('aptTime').value = parts[1].substring(0, 5);
+    } else {
+      document.getElementById('aptTime').value = '09:00';
+    }
+  } else {
+    document.getElementById('aptDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('aptTime').value = '09:00';
+  }
+}
+
+function closeNewAppointmentModal() {
+  document.getElementById('newAppointmentModal').classList.add('hidden');
 }
 
 async function handleCreateAppointment(e) {
@@ -774,35 +848,77 @@ async function handleCreateAppointment(e) {
         status: 'confirmed'
       })
     });
-    alert('Consulta agendada com sucesso!');
-    document.getElementById('newAppointmentCard').classList.add('hidden');
+    alert('Consulta agendada com sucesso no calendário!');
+    closeNewAppointmentModal();
     document.getElementById('aptCustomerName').value = '';
     document.getElementById('aptCustomerPhone').value = '';
     document.getElementById('aptNotes').value = '';
-    await loadAppointments();
+    await loadAppointmentsToCalendar();
   } catch (err) {
     alert('Erro ao agendar: ' + err.message);
   }
 }
 
-async function updateAppointmentStatus(id, status) {
+function openAppointmentDetailModal(apt) {
+  activeModalApt = apt;
+  const modal = document.getElementById('appointmentDetailModal');
+  modal.classList.remove('hidden');
+
+  document.getElementById('modalAptCustomer').textContent = apt.customerName;
+  document.getElementById('modalAptService').textContent = apt.serviceName;
+
+  const formattedDate = apt.date.split('-').reverse().join('/');
+  document.getElementById('modalAptDateTime').textContent = `${formattedDate} às ${apt.time}`;
+
+  const cleanPhone = apt.customerPhone.replace(/\D/g, '');
+  document.getElementById('modalAptPhone').textContent = `+${cleanPhone}`;
+  document.getElementById('modalAptPhoneLink').href = `https://wa.me/${cleanPhone}`;
+
+  document.getElementById('modalAptNotes').textContent = apt.notes || 'Nenhuma observação informada.';
+
+  const badge = document.getElementById('modalAptStatusBadge');
+  if (apt.status === 'confirmed') {
+    badge.textContent = 'Confirmado';
+    badge.className = 'text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400';
+  } else if (apt.status === 'pending') {
+    badge.textContent = 'Pendente';
+    badge.className = 'text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400';
+  } else if (apt.status === 'completed') {
+    badge.textContent = 'Realizado';
+    badge.className = 'text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400';
+  } else {
+    badge.textContent = 'Cancelado';
+    badge.className = 'text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400';
+  }
+}
+
+function closeAppointmentDetailModal() {
+  document.getElementById('appointmentDetailModal').classList.add('hidden');
+  activeModalApt = null;
+}
+
+async function changeModalAptStatus(status) {
+  if (!activeModalApt) return;
   try {
-    await fetch(`/api/appointments/${id}/status`, {
+    await fetch(`/api/appointments/${activeModalApt.id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status })
     });
-    await loadAppointments();
+    closeAppointmentDetailModal();
+    await loadAppointmentsToCalendar();
   } catch (err) {
-    alert('Erro ao atualizar: ' + err.message);
+    alert('Erro ao atualizar status: ' + err.message);
   }
 }
 
-async function deleteAppointment(id) {
-  if (!confirm('Deseja excluir este agendamento?')) return;
+async function deleteModalAppointment() {
+  if (!activeModalApt) return;
+  if (!confirm(`Deseja realmente excluir a consulta de '${activeModalApt.customerName}'?`)) return;
   try {
-    await fetch(`/api/appointments/${id}`, { method: 'DELETE' });
-    await loadAppointments();
+    await fetch(`/api/appointments/${activeModalApt.id}`, { method: 'DELETE' });
+    closeAppointmentDetailModal();
+    await loadAppointmentsToCalendar();
   } catch (err) {
     alert('Erro ao excluir: ' + err.message);
   }
