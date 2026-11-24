@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoAtendimento WhatsApp Multi-Nicho</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    .wa-bg {
+      background-color: #efeae2;
+      background-image: radial-gradient(#d1d7db 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- Topbar -->
+  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-xl shadow-lg shadow-emerald-500/30">
+          <i class="fab fa-whatsapp"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight">AutoAtendimento AI</h1>
+          <p class="text-xs text-slate-400">Sistema Multi-Nicho Inteligente</p>
+        </div>
+      </div>
+
+      <!-- Seletor de Nicho Ativo -->
+      <div class="flex items-center space-x-3 bg-slate-800/80 border border-slate-700 px-4 py-1.5 rounded-xl">
+        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Nicho Ativo:
+        </span>
+        <select id="nicheSelector" onchange="changeActiveNiche(this.value)" class="bg-slate-900 border border-slate-600 text-emerald-400 text-sm font-semibold rounded-lg px-3 py-1 focus:outline-none focus:border-emerald-500">
+          <option value="">Carregando nichos...</option>
+        </select>
+      </div>
+
+      <!-- Abas de Navegação -->
+      <nav class="flex items-center space-x-1 bg-slate-800 p-1 rounded-xl">
+        <button onclick="switchTab('simulator')" id="tabBtn-simulator" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white transition-all flex items-center gap-2">
+          <i class="fas fa-mobile-alt"></i> Simulador WhatsApp
+        </button>
+        <button onclick="switchTab('live')" id="tabBtn-live" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-2">
+          <i class="fas fa-headset"></i> Atendimentos
+        </button>
+        <button onclick="switchTab('nicheConfig')" id="tabBtn-nicheConfig" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-2">
+          <i class="fas fa-sliders-h"></i> Configurar Nicho
+        </button>
+        <button onclick="switchTab('webhook')" id="tabBtn-webhook" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-2">
+          <i class="fas fa-plug"></i> WhatsApp Real
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Banner de Informação do Nicho -->
+  <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white py-2.5 px-4 shadow-sm">
+    <div class="max-w-7xl mx-auto flex items-center justify-between text-xs font-medium">
+      <div class="flex items-center space-x-2">
+        <i class="fas fa-store"></i>
+        <span id="bannerNicheName">Carregando informações do negócio...</span>
+      </div>
+      <div id="bannerHours" class="text-emerald-100 hidden sm:block">
+        Horário: Segunda a Sexta
+      </div>
+    </div>
+  </div>
+
+  <!-- Conteúdo Principal -->
+  <main class="max-w-7xl mx-auto w-full flex-1 p-4 sm:p-6">
+
+    <!-- ABA 1: SIMULADOR DE WHATSAPP -->
+    <div id="tab-simulator" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- Detalhes do Negócio Ativo -->
+      <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b pb-3">
+          <div>
+            <h2 class="font-bold text-slate-800 text-base" id="infoNicheTitle">Clínica OdontoVida</h2>
+            <span class="text-xs text-emerald-600 font-semibold px-2 py-0.5 bg-emerald-50 rounded-full" id="infoNicheCategory">Odontologia</span>
+          </div>
+          <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md" id="infoNicheId">id: dentista</span>
+        </div>
+
+        <p class="text-xs text-slate-600" id="infoNicheDesc">Carregando...</p>
+
+        <!-- Persona -->
+        <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3">
+          <div class="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1">
+            <i class="fas fa-robot text-emerald-600"></i> Persona da IA
+          </div>
+          <div class="text-xs text-slate-600 space-y-1">
+            <div><strong>Atendente:</strong> <span id="infoAgentName">-</span></div>
+            <div><strong>Tom de Voz:</strong> <span id="infoAgentTone">-</span></div>
+          </div>
+        </div>
+
+        <!-- Dicas de Teste -->
+        <div class="space-y-2">
+          <div class="text-xs font-bold text-slate-700 uppercase tracking-wider">💡 Ideias para testar no chat:</div>
+          <div class="flex flex-wrap gap-1.5 text-xs">
+            <button onclick="sendQuickMessage('Olá, bom dia!')" class="bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg text-slate-700 transition">"Olá, bom dia!"</button>
+            <button onclick="sendQuickMessage('Quais são os serviços e valores?')" class="bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg text-slate-700 transition">"Quais os valores?"</button>
+            <button onclick="sendQuickMessage('Qual o horário de funcionamento e endereço?')" class="bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg text-slate-700 transition">"Horário e endereço"</button>
+            <button onclick="sendQuickMessage('Gostaria de agendar ou fazer um pedido')" class="bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg text-slate-700 transition">"Agendar / Pedir"</button>
+            <button onclick="sendQuickMessage('Quero falar com uma pessoa de verdade')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg transition">"Falar com atendente"</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Smartphone / Tela do WhatsApp -->
+      <div class="lg:col-span-7 flex justify-center">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-xl border-4 border-slate-800 overflow-hidden flex flex-col h-[640px]">
+          
+          <!-- Topo do Chat do WhatsApp -->
+          <div class="bg-[#075e54] text-white px-4 py-3 flex items-center justify-between shadow">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-full bg-slate-200 text-[#075e54] flex items-center justify-center font-bold text-lg overflow-hidden border">
+                <i class="fas fa-building text-sm"></i>
+              </div>
+              <div>
+                <div class="font-bold text-sm leading-tight" id="chatHeaderName">Atendimento Virtual</div>
+                <div class="text-[11px] text-emerald-200 flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400"></span> online
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2 text-slate-200">
+              <button onclick="clearSimulatorChat()" title="Limpar conversa" class="p-2 hover:bg-white/10 rounded-full transition">
+                <i class="fas fa-trash-alt text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Área de Mensagens (Fundo WhatsApp) -->
+          <div id="chatMessages" class="wa-bg flex-1 p-4 overflow-y-auto space-y-3">
+            <div class="text-center">
+              <span class="bg-emerald-100/80 text-emerald-900 text-[10px] font-semibold px-2.5 py-1 rounded-lg shadow-sm">
+                🔒 Conversa protegida e simulada em tempo real
+              </span>
+            </div>
+          </div>
+
+          <!-- Indicador de "Digitando..." -->
+          <div id="typingIndicator" class="hidden px-4 py-1 text-xs text-slate-500 italic bg-[#efeae2] border-t border-slate-200/50">
+            <i class="fas fa-circle-notch fa-spin text-emerald-600 mr-1"></i> Atendente está digitando...
+          </div>
+
+          <!-- Barra de Envio de Mensagem -->
+          <form onsubmit="handleSendSimulatorMessage(event)" class="bg-[#f0f2f5] p-2.5 flex items-center space-x-2 border-t">
+            <input 
+              type="text" 
+              id="simulatorInput" 
+              placeholder="Digite sua mensagem como cliente..." 
+              autocomplete="off"
+              class="flex-1 bg-white border border-slate-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-emerald-600 shadow-inner"
+            />
+            <button type="submit" class="w-10 h-10 rounded-full bg-[#00a884] hover:bg-[#008f6f] text-white flex items-center justify-center transition shadow-md">
+              <i class="fas fa-paper-plane text-sm"></i>
+            </button>
+          </form>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ABA 2: PAINEL DE ATENDIMENTOS REAIS / LIVE CHAT -->
+    <div id="tab-live" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-bold text-slate-800">Painel de Atendimentos</h2>
+            <p class="text-xs text-slate-500">Acompanhe todos os clientes que entraram em contato e assuma atendimentos humanos</p>
+          </div>
+          <button onclick="loadSessions()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-semibold text-slate-700 transition flex items-center gap-1.5">
+            <i class="fas fa-sync-alt"></i> Atualizar
+          </button>
+        </div>
+
+        <div id="sessionsContainer" class="space-y-3">
+          <div class="text-center py-10 text-slate-400 text-sm">Nenhum atendimento registrado ainda. Teste no simulador ao lado!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA 3: CONFIGURADOR DE NICHO (JSON / FORMULÁRIO) -->
+    <div id="tab-nicheConfig" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-800 mb-1">Editor do Nicho Ativo</h2>
+        <p class="text-xs text-slate-500 mb-4">Personalize o comportamento, empresa, serviços e regras do robô</p>
+
+        <form onsubmit="handleSaveNiche(event)" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">ID do Nicho (slug sem espaços)</label>
+              <input type="text" id="editNicheId" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Nome da Empresa</label>
+              <input type="text" id="editNicheName" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Segmento / Categoria</label>
+              <input type="text" id="editNicheCategory" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Atendente IA</label>
+              <input type="text" id="editAgentName" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Instruções / Missão da IA</label>
+            <textarea id="editInstructions" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500"></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Horário de Funcionamento</label>
+              <input type="text" id="editHours" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Endereço Completo</label>
+              <input type="text" id="editAddress" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Configuração Completa (JSON)</label>
+            <textarea id="editRawJson" rows="8" class="font-mono text-xs w-full bg-slate-900 text-emerald-400 p-3 rounded-lg"></textarea>
+          </div>
+
+          <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition">
+            Salvar e Atualizar Nicho
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ABA 4: CONEXÃO COM WHATSAPP REAL -->
+    <div id="tab-webhook" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <h2 class="text-lg font-bold text-slate-800">Conectar a um Número Real de WhatsApp</h2>
+        <p class="text-sm text-slate-600">
+          Você e seu parceiro podem conectar este sistema a qualquer API de WhatsApp que envie Webhook (como Evolution API, Z-API ou Meta Cloud API oficial).
+        </p>
+
+        <div class="bg-slate-50 border p-4 rounded-xl space-y-3">
+          <div class="text-xs font-bold text-slate-700 uppercase">Sua URL de Webhook:</div>
+          <div class="flex items-center space-x-2">
+            <input type="text" id="webhookUrlInput" readonly value="http://seu-servidor-ou-ngrok:3000/webhook/whatsapp" class="flex-1 bg-white border px-3 py-2 rounded-lg text-xs font-mono">
+            <button onclick="navigator.clipboard.writeText(document.getElementById('webhookUrlInput').value); alert('Copiado!')" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg">Copiar</button>
+          </div>
+          <p class="text-xs text-slate-500">
+            💡 <strong>Dica de desenvolvimento local:</strong> Use o <code>ngrok http 3000</code> ou <code>cloudflared</code> para expor sua porta 3000 para a internet e colar no painel da sua API de WhatsApp.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Script da aplicação -->
+  <script src="/app.js"></script>
+</body>
+</html>

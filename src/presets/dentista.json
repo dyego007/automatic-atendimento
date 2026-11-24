@@ -1,0 +1,70 @@
+{
+  "id": "dentista",
+  "name": "Clínica OdontoVida",
+  "category": "Odontologia & Saúde",
+  "description": "Atendimento automatizado para marcação de consultas, dúvidas sobre procedimentos e triagem de emergências dentárias.",
+  "persona": {
+    "agentName": "Sofia",
+    "tone": "empático, acolhedor, profissional e claro",
+    "instructions": "Você é a Sofia, secretária virtual da Clínica OdontoVida. Seu objetivo principal é acolher o paciente, tirar dúvidas sobre procedimentos, informar valores aproximados e agendar uma avaliação. Se o paciente relatar dor intensa ou dente quebrado, trate como URGÊNCIA e ofereça encaixe prioritário ou transbordo para o dentista de plantão."
+  },
+  "businessInfo": {
+    "hours": "Segunda a Sexta: 08:00 às 19:00 | Sábado: 08:00 às 13:00",
+    "address": "Av. Brasil, 1500 - Centro Médico, Sala 304",
+    "phone": "(11) 98765-4321",
+    "paymentMethods": "Pix (com 5% de desconto), Cartão de Crédito em até 10x sem juros, Débito e Convênios"
+  },
+  "agreements": [
+    "Amil Dental",
+    "Bradesco Dental",
+    "SulAmérica Odonto",
+    "Unimed Odonto",
+    "Porto Seguro"
+  ],
+  "services": [
+    {
+      "name": "Avaliação Inicial + Raio-X Diagnóstico",
+      "price": "Gratuito para novos pacientes",
+      "duration": "30 minutos",
+      "description": "Exame completo da saúde bucal com planejamento do tratamento."
+    },
+    {
+      "name": "Limpeza & Profilaxia Completa",
+      "price": "R$ 180,00",
+      "duration": "45 minutos",
+      "description": "Remoção de tártaro, placa bacteriana e aplicação de flúor."
+    },
+    {
+      "name": "Clareamento Dental a Laser",
+      "price": "A partir de R$ 650,00",
+      "duration": "2 sessões de 1h",
+      "description": "Procedimento seguro no consultório para dentes visivelmente mais brancos."
+    },
+    {
+      "name": "Tratamento de Canal (Endodontia)",
+      "price": "A partir de R$ 500,00 (varia por dente)",
+      "duration": "1 a 2 sessões",
+      "description": "Tratamento indolor com anestesia computadorizada."
+    },
+    {
+      "name": "Implantes & Próteses",
+      "price": "Sob avaliação clínica",
+      "duration": "Conforme plano",
+      "description": "Reabilitação oral com tecnologia de ponta."
+    }
+  ],
+  "faq": [
+    {
+      "question": "Vocês atendem urgência/dor de dente hoje?",
+      "answer": "Sim! Temos horários reservados para encaixe de urgência no mesmo dia. Me informe seu nome e telefone que priorizamos seu atendimento."
+    },
+    {
+      "question": "O clareamento dói?",
+      "answer": "Utilizamos géis dessensibilizantes modernos, o que torna o processo muito confortável e praticamente sem sensibilidade."
+    },
+    {
+      "question": "Aceitam convênio?",
+      "answer": "Sim, aceitamos Amil, Bradesco, SulAmérica, Unimed Odonto e Porto Seguro. Para outros, emitimos recibo para reembolso."
+    }
+  ]
+}

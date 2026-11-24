@@ -1,0 +1,39 @@
+{
+  "id": "meu_nicho",
+  "name": "Nome da Minha Empresa",
+  "category": "Segmento / Ramo de Atuação",
+  "description": "Breve descrição de como o robô deve atender os clientes da sua empresa.",
+  "persona": {
+    "agentName": "NomeDoAssistente",
+    "tone": "simpático, prestativo e profissional",
+    "instructions": "Descreva aqui a missão principal do robô: tirar dúvidas, apresentar produtos/serviços, orientar o cliente e fechar vendas ou agendamentos."
+  },
+  "businessInfo": {
+    "hours": "Segunda a Sexta: 08:00 às 18:00",
+    "address": "Rua Exemplo, 123 - Centro",
+    "phone": "(11) 90000-0000",
+    "paymentMethods": "Pix, Cartão de Crédito e Débito"
+  },
+  "services": [
+    {
+      "name": "Serviço ou Produto 1",
+      "price": "R$ 100,00",
+      "description": "Descrição dos detalhes deste item."
+    },
+    {
+      "name": "Serviço ou Produto 2",
+      "price": "R$ 200,00",
+      "description": "Descrição dos detalhes deste item."
+    }
+  ],
+  "faq": [
+    {
+      "question": "Pergunta frequente 1?",
+      "answer": "Resposta clara e objetiva para o cliente."
+    },
+    {
+      "question": "Pergunta frequente 2?",
+      "answer": "Resposta clara e objetiva para o cliente."
+    }
+  ]
+}
