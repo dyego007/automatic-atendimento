@@ -5,6 +5,102 @@ let simPhone = '5511999998888';
 let pollInterval = null;
 let currentUser = null;
 
+// ─── Alertas Sonoros & Notificações Web Audio API ──────────────────────────────
+let audioCtx = null;
+let lastTotalMessages = null;
+let knownHumanSessions = new Set();
+let currentHumanWaitingPhone = null;
+
+function getAudioContext() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) audioCtx = new AudioContext();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
+function playNotificationSound(type = 'message') {
+  if (localStorage.getItem('sound_alerts_enabled') === 'false') return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    if (type === 'human_alert') {
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'triangle';
+      osc1.frequency.setValueAtTime(659.25, now);
+      gain1.gain.setValueAtTime(0.3, now);
+      gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.22);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(880, now + 0.18);
+      gain2.gain.setValueAtTime(0.35, now + 0.18);
+      gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.18);
+      osc2.stop(now + 0.5);
+    } else {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    }
+  } catch (e) {
+    console.warn('Erro ao reproduzir alerta sonoro:', e);
+  }
+}
+
+function toggleSoundAlerts() {
+  const enabled = localStorage.getItem('sound_alerts_enabled') !== 'false';
+  const next = !enabled;
+  localStorage.setItem('sound_alerts_enabled', next ? 'true' : 'false');
+  updateSoundToggleUI(next);
+  if (next) playNotificationSound('message');
+}
+
+function updateSoundToggleUI(enabled) {
+  const icon = document.getElementById('soundToggleIcon');
+  const label = document.getElementById('soundToggleLabel');
+  const btn = document.getElementById('soundToggleBtn');
+  if (!icon || !label) return;
+
+  if (enabled) {
+    icon.className = 'fas fa-volume-up text-emerald-400';
+    label.textContent = 'Som Ativo';
+    if (btn) btn.title = 'Alertas sonoros: Ativados (clique para silenciar)';
+  } else {
+    icon.className = 'fas fa-volume-mute text-slate-500';
+    label.textContent = 'Mudo';
+    if (btn) btn.title = 'Alertas sonoros: Silenciados (clique para ativar)';
+  }
+}
+
+function goToHumanChat() {
+  switchTab('livechat');
+  if (currentHumanWaitingPhone) {
+    selectLiveChat(currentHumanWaitingPhone);
+  }
+}
+
 // Inicialização com Autenticação
 document.addEventListener('DOMContentLoaded', async () => {
   const isAuth = await checkAuth();
@@ -123,7 +219,59 @@ async function handleLogout() {
   document.getElementById('loginScreen').classList.remove('hidden');
 }
 
+async function checkNotificationsAndAlerts() {
+  if (!currentStore || !currentUser) return;
+  try {
+    const res = await fetch(`/api/sessions?storeId=${currentStore.id}`);
+    if (!res.ok) return;
+    const sessions = await res.json();
+
+    let totalMsgCount = 0;
+    const humanWaiting = sessions.filter(s => s.status === 'human');
+
+    sessions.forEach(s => {
+      totalMsgCount += (s.messages ? s.messages.length : 0);
+    });
+
+    // Detecta novas mensagens recebidas de clientes
+    if (lastTotalMessages !== null && totalMsgCount > lastTotalMessages) {
+      playNotificationSound('message');
+    }
+    lastTotalMessages = totalMsgCount;
+
+    // Detecta se há cliente aguardando atendimento humano (Transbordo)
+    const alertBanner = document.getElementById('humanAlertBanner');
+    const alertCustomerName = document.getElementById('humanAlertCustomerName');
+
+    if (humanWaiting.length > 0) {
+      const firstWaiting = humanWaiting[0];
+      currentHumanWaitingPhone = firstWaiting.phone;
+
+      if (alertBanner) {
+        alertBanner.classList.remove('hidden');
+        if (alertCustomerName) {
+          alertCustomerName.textContent = `${firstWaiting.customerName} (+${firstWaiting.phone})`;
+        }
+      }
+
+      // Toca alarme se for um novo pedido de transbordo
+      const hasNewHumanRequest = humanWaiting.some(s => !knownHumanSessions.has(s.phone));
+      if (hasNewHumanRequest) {
+        playNotificationSound('human_alert');
+        humanWaiting.forEach(s => knownHumanSessions.add(s.phone));
+      }
+    } else {
+      if (alertBanner) alertBanner.classList.add('hidden');
+      currentHumanWaitingPhone = null;
+      knownHumanSessions.clear();
+    }
+  } catch (err) {
+    console.error('Erro na verificação de alertas e notificações:', err);
+  }
+}
+
 async function initApp() {
+  updateSoundToggleUI(localStorage.getItem('sound_alerts_enabled') !== 'false');
   await loadNiches();
   await loadStores();
 
@@ -140,6 +288,7 @@ async function initApp() {
       if (currentStore && currentUser) {
         await checkStoreWhatsAppStatus(currentStore.id);
         await loadStoreStats(currentStore.id);
+        await checkNotificationsAndAlerts();
         if (!document.getElementById('tab-livechat').classList.contains('hidden')) {
           await loadLiveSessions(false);
           if (selectedChatPhone) {
@@ -534,26 +683,36 @@ async function loadLiveSessions(selectFirst = false) {
     sessions.forEach((s, idx) => {
       const item = document.createElement('div');
       const isSelected = selectedChatPhone === s.phone;
-      item.className = `p-3.5 cursor-pointer transition flex items-center justify-between gap-3 ${
-        isSelected ? 'bg-slate-900 border-l-4 border-emerald-500' : 'hover:bg-slate-900/60'
-      }`;
+      const isHuman = s.status === 'human';
+
+      let baseClass = 'hover:bg-slate-900/60';
+      if (isSelected) {
+        baseClass = 'bg-slate-900 border-l-4 border-emerald-500';
+      } else if (isHuman) {
+        baseClass = 'bg-amber-500/10 border-l-4 border-amber-400 hover:bg-amber-500/15 animate-pulse';
+      }
+
+      item.className = `p-3.5 cursor-pointer transition flex items-center justify-between gap-3 ${baseClass}`;
 
       const lastMsg = s.messages.length > 0 ? s.messages[s.messages.length - 1].text : 'Conversa iniciada';
-      const isHuman = s.status === 'human';
 
       item.onclick = () => selectLiveChat(s.phone);
 
       item.innerHTML = `
         <div class="flex items-center gap-3 overflow-hidden">
-          <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-bold shrink-0">
-            <i class="fas fa-user text-xs"></i>
+          <div class="w-10 h-10 rounded-full ${isHuman ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-800 text-slate-300'} flex items-center justify-center font-bold shrink-0">
+            <i class="fas ${isHuman ? 'fa-headset' : 'fa-user'} text-xs"></i>
           </div>
-          <div class="overflow-hidden">
-            <div class="flex items-center gap-2">
+          <div class="overflow-hidden flex-1">
+            <div class="flex items-center justify-between gap-2">
               <span class="text-xs font-bold text-slate-200 truncate">${s.customerName}</span>
-              ${isHuman ? '<span class="w-2 h-2 rounded-full bg-amber-400 shrink-0" title="Atendente Humano"></span>' : '<span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0" title="IA Ativa"></span>'}
+              ${
+                isHuman
+                  ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-amber-500 text-slate-950 shrink-0">🚨 HUMANO</span>'
+                  : '<span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0" title="IA Ativa"></span>'
+              }
             </div>
-            <p class="text-[11px] text-slate-400 truncate mt-0.5">${lastMsg}</p>
+            <p class="text-[11px] ${isHuman ? 'text-amber-200 font-medium' : 'text-slate-400'} truncate mt-0.5">${lastMsg}</p>
           </div>
         </div>
       `;
@@ -1019,6 +1178,48 @@ function openAppointmentDetailModal(apt) {
   } else {
     badge.textContent = 'Cancelado';
     badge.className = 'text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400';
+  }
+
+  const reminderEl = document.getElementById('modalAptReminderStatus');
+  if (reminderEl) {
+    if (apt.lastReminderSentAt) {
+      const timeStr = new Date(apt.lastReminderSentAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      reminderEl.innerHTML = `<span class="text-emerald-400 font-bold flex items-center gap-1"><i class="fas fa-check-circle"></i> Enviado hoje às ${timeStr}</span>`;
+    } else if (apt.reminder24hSent || apt.reminder2hSent) {
+      reminderEl.innerHTML = `<span class="text-emerald-400 font-bold flex items-center gap-1"><i class="fas fa-check-circle"></i> Enviado</span>`;
+    } else {
+      reminderEl.innerHTML = `<span class="text-slate-400">Pendente de envio</span>`;
+    }
+  }
+}
+
+async function sendAppointmentReminderFromModal() {
+  if (!activeModalApt) return;
+  const btn = document.getElementById('btnModalSendReminder');
+  const originalHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+  }
+
+  try {
+    const res = await fetch(`/api/appointments/${activeModalApt.id}/remind`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao enviar lembrete.');
+
+    alert(data.message || 'Lembrete enviado com sucesso!');
+    const reminderEl = document.getElementById('modalAptReminderStatus');
+    if (reminderEl) {
+      reminderEl.innerHTML = `<span class="text-emerald-400 font-bold flex items-center gap-1"><i class="fas fa-check-circle"></i> Enviado agora!</span>`;
+    }
+    await loadAppointmentsToCalendar();
+  } catch (err) {
+    alert('Erro ao enviar lembrete: ' + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
   }
 }
 

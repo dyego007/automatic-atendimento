@@ -176,6 +176,10 @@
 
       <!-- Seletor Rápido de Loja / Cliente no Topo -->
       <div class="topbar-actions"><button type="button" id="themeToggle" data-theme-toggle class="theme-toggle" aria-label="Ativar tema escuro" aria-pressed="false"><i class="fas fa-moon" aria-hidden="true"></i><span>Tema escuro</span></button>
+        <button type="button" id="soundToggleBtn" onclick="toggleSoundAlerts()" class="theme-toggle" title="Alertas sonoros: Ativados" aria-label="Alternar alertas sonoros">
+          <i class="fas fa-volume-up text-emerald-400" id="soundToggleIcon" aria-hidden="true"></i>
+          <span id="soundToggleLabel">Som Ativo</span>
+        </button>
         <div class="flex items-center bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-1.5 shadow-sm">
           <span class="text-xs text-slate-400 mr-2 flex items-center gap-1.5 font-medium">
             <i class="fas fa-building text-emerald-400"></i> Loja Ativa:
@@ -192,6 +196,27 @@
 
     <!-- CORPO DAS ABAS -->
     <main id="mainContent" tabindex="-1" class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+
+      <!-- BANNER DE ALERTA: TRANSBORDO / ATENDIMENTO HUMANO SOLICITADO -->
+      <div id="humanAlertBanner" class="hidden p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-rose-500/15 to-amber-500/20 border-2 border-amber-500 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-amber-500/10 animate-pulse">
+        <div class="flex items-center gap-3">
+          <span class="relative flex h-3.5 w-3.5 shrink-0">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-rose-500"></span>
+          </span>
+          <div>
+            <div class="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fas fa-bell"></i> ATENÇÃO: Atendimento Humano Solicitado!
+            </div>
+            <p class="text-xs text-slate-200 mt-0.5">
+              O cliente <strong id="humanAlertCustomerName" class="text-white">Cliente</strong> solicitou atendimento humano e está aguardando resposta!
+            </p>
+          </div>
+        </div>
+        <button onclick="goToHumanChat()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+          <i class="fas fa-headset"></i> Atender Agora no Chat
+        </button>
+      </div>
 
       <!-- ========================================== -->
       <!-- ABA 0: MINHAS LOJAS / CLIENTES (MULTI-TENANT) -->
@@ -622,14 +647,21 @@
               <span class="text-slate-400 block text-[10px] uppercase font-bold mb-0.5">Observações:</span>
               <p id="modalAptNotes" class="text-slate-300">-</p>
             </div>
+            <div id="modalAptReminderBox" class="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800/80">
+              <span class="text-slate-400 flex items-center gap-1.5"><i class="fas fa-bell text-amber-400"></i> Lembrete WhatsApp:</span>
+              <span id="modalAptReminderStatus" class="font-semibold text-[11px] text-slate-300">Pendente de envio</span>
+            </div>
           </div>
 
           <!-- Ações do Modal -->
           <div class="pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-1.5">
-              <button id="btnModalConfirm" onclick="changeModalAptStatus('confirmed')" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-semibold rounded-lg">Confirmar</button>
-              <button id="btnModalComplete" onclick="changeModalAptStatus('completed')" class="px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 text-xs font-semibold rounded-lg">Realizado</button>
-              <button id="btnModalCancel" onclick="changeModalAptStatus('cancelled')" class="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs font-semibold rounded-lg">Cancelar</button>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button id="btnModalConfirm" onclick="changeModalAptStatus('confirmed')" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-semibold rounded-lg cursor-pointer">Confirmar</button>
+              <button id="btnModalComplete" onclick="changeModalAptStatus('completed')" class="px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 text-xs font-semibold rounded-lg cursor-pointer">Realizado</button>
+              <button id="btnModalCancel" onclick="changeModalAptStatus('cancelled')" class="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs font-semibold rounded-lg cursor-pointer">Cancelar</button>
+              <button id="btnModalSendReminder" onclick="sendAppointmentReminderFromModal()" class="px-3 py-1.5 bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/20 text-xs font-semibold rounded-lg flex items-center gap-1.5 cursor-pointer" title="Envia mensagem com opções 1 para Confirmar e 2 para Reagendar">
+                <i class="fas fa-paper-plane text-[10px]"></i> Disparar Lembrete
+              </button>
             </div>
             <button onclick="deleteModalAppointment()" class="p-2 text-slate-500 hover:text-rose-400 transition" title="Excluir"><i class="fas fa-trash-alt text-xs"></i></button>
           </div>

@@ -36,6 +36,9 @@ export interface Appointment {
   status: 'confirmed' | 'pending' | 'cancelled' | 'completed';
   notes?: string;
   createdAt: string;
+  reminder24hSent?: boolean;
+  reminder2hSent?: boolean;
+  lastReminderSentAt?: string;
 }
 
 export class AppointmentService {
@@ -150,6 +153,33 @@ export class AppointmentService {
     this.appointments.set(id, newApt);
     this.saveAppointments();
     return newApt;
+  }
+
+  public getAppointment(id: string): Appointment | undefined {
+    return this.appointments.get(id);
+  }
+
+  public updateAppointment(id: string, updates: Partial<Appointment>): Appointment {
+    const apt = this.appointments.get(id);
+    if (!apt) throw new Error('Agendamento não encontrado.');
+    Object.assign(apt, updates);
+    this.saveAppointments();
+    return apt;
+  }
+
+  public findUpcomingByPhone(storeId: string, phone: string): Appointment | undefined {
+    const cleanPhone = phone.replace(/\D/g, '');
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+
+    const list = this.listAppointments(storeId)
+      .filter(a => {
+        const aptCleanPhone = a.customerPhone.replace(/\D/g, '');
+        const matchPhone = aptCleanPhone === cleanPhone || aptCleanPhone.endsWith(cleanPhone) || cleanPhone.endsWith(aptCleanPhone);
+        return matchPhone && a.date >= today && a.status !== 'cancelled' && a.status !== 'completed';
+      });
+
+    return list[0];
   }
 
   public updateAppointmentStatus(id: string, status: 'confirmed' | 'pending' | 'cancelled' | 'completed'): Appointment {

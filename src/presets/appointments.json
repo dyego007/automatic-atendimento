@@ -22,5 +22,16 @@
     "status": "pending",
     "notes": "Primeira sessão do clareamento.",
     "createdAt": "2026-11-24T12:43:09.954Z"
+  },
+  {
+    "storeId": "loja-1",
+    "customerName": "Paciente Teste Lembrete",
+    "customerPhone": "551199998877",
+    "serviceName": "Limpeza Dental e Profilaxia",
+    "date": "2026-11-25",
+    "time": "15:00",
+    "status": "pending",
+    "id": "apt-mwuu4wlf-usy",
+    "createdAt": "2026-11-24T15:14:07.491Z"
   }
 ]

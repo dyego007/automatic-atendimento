@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { apiRouter } from './routes/api.js';
 import { webhookRouter } from './routes/webhook.js';
 import { nicheService } from './services/nicheService.js';
+import { reminderService } from './services/reminderService.js';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.get('*', (req, res, next) => {
 
 app.listen(PORT, () => {
   const activeNiche = nicheService.getActiveNiche();
+  reminderService.start();
   console.log('====================================================');
   console.log(`🤖 AUTOMATIC-ATENDIMENTO INICIADO COM SUCESSO!`);
   console.log(`🚀 Painel & Simulador Web: http://localhost:${PORT}`);

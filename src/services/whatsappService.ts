@@ -1,6 +1,7 @@
 import { nicheService } from './nicheService.js';
 import { sessionService, ChatSession, ChatMessage } from './sessionService.js';
 import { availabilityService } from './availabilityService.js';
+import { appointmentService } from './appointmentService.js';
 import { aiService } from './aiService.js';
 import { storeService } from './storeService.js';
 
@@ -60,6 +61,47 @@ export class WhatsAppService {
         session,
         replyMessage: reply
       };
+    }
+
+    // Resposta rápida a Lembrete de Consulta (1 = Confirmar, 2 = Reagendar)
+    const cleanInput = text.trim().toLowerCase();
+    const isConfirmOption = /^(1|confirmar|confirmo|sim|vou sim|vou|confirmado|presenca confirmada|presença confirmada)[.!]*$/i.test(cleanInput);
+    const isRescheduleOption = /^(2|reagendar|reagenda|outro horario|outro horário|mudar data|mudar horario|mudar horário|desmarcar)[.!]*$/i.test(cleanInput);
+
+    let pendingAptId = session.metadata?.pendingReminderAppointmentId;
+    let targetApt = pendingAptId ? appointmentService.getAppointment(pendingAptId) : appointmentService.findUpcomingByPhone(targetStoreId, cleanPhone);
+
+    if (targetApt && (isConfirmOption || isRescheduleOption) && !session.metadata?.appointmentFlow) {
+      if (isConfirmOption) {
+        appointmentService.updateAppointmentStatus(targetApt.id, 'confirmed');
+        if (session.metadata) delete session.metadata.pendingReminderAppointmentId;
+
+        const [ano, mes, dia] = targetApt.date.split('-');
+        const dateFormatted = `${dia}/${mes}/${ano}`;
+        const confirmText = `✅ *Presença Confirmada!*\n\nPerfeito, *${targetApt.customerName}*! Seu atendimento foi confirmado na *${store.name}*:\n🗓️ *Data:* ${dateFormatted} às *${targetApt.time}*\n🩺 *Serviço:* ${targetApt.serviceName}\n\nTe aguardamos! Se precisar de algo ou tiver qualquer dúvida antes, estamos por aqui. Tenha um ótimo dia! 😊`;
+
+        const reply = sessionService.addMessage(targetStoreId, cleanPhone, 'bot', confirmText);
+        if (payload.source !== 'baileys') {
+          await this.dispatchExternalMessage(targetStoreId, cleanPhone, confirmText, jid);
+        }
+        return { session, replyMessage: reply };
+      } else if (isRescheduleOption) {
+        appointmentService.updateAppointment(targetApt.id, {
+          status: 'pending',
+          notes: `${targetApt.notes || ''} [Solicitou reagendamento em ${new Date().toLocaleDateString('pt-BR')}]`.trim()
+        });
+        session.metadata = session.metadata || {};
+        session.metadata.appointmentFlow = { stage: 'date' };
+        if (session.metadata) delete session.metadata.pendingReminderAppointmentId;
+
+        const rescheduleText = `🔄 *Reagendamento de Atendimento*\n\nEntendido, *${targetApt.customerName}*! Vamos encontrar um novo dia e horário para você na *${store.name}*.\n\n🗓️ Para qual data você gostaria de reagendar?\n(Informe a data desejada, por exemplo *DD/MM/AAAA* ou responda *amanhã*).`;
+
+        const reply = sessionService.addMessage(targetStoreId, cleanPhone, 'bot', rescheduleText);
+        if (payload.source !== 'baileys') {
+          await this.dispatchExternalMessage(targetStoreId, cleanPhone, rescheduleText, jid);
+        }
+        return { session, replyMessage: reply };
+      }
     }
 
     // Gera a resposta da IA contextualizada para o nicho desta loja

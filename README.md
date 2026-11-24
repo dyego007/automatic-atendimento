@@ -7,6 +7,8 @@ Sistema inteligente e modular de atendimento automatizado via **WhatsApp**, proj
 ## ✨ Principais Funcionalidades
 
 - 🔒 **Sistema de Login & Controle de Acesso (RBAC)**: Autenticação com perfis separados: **Administrador do SaaS** (gerencia todas as lojas, clientes e nichos) e **Secretária/Atendente** (acesso restrito apenas à loja/clínica dele, sem ver dados de outros clientes).
+- 🔔 **Lembretes Automáticos de Agendamento (Anti-Faltas)**: O robô envia lembrete no WhatsApp do cliente 24h e 2h antes da consulta. O paciente pode responder **1 para Confirmar** (a consulta fica verde/confirmada na hora) ou **2 para Reagendar** (a IA já oferece novos horários disponíveis). Também inclui botão no painel para disparo manual imediato!
+- 🔊 **Alertas Sonoros & Notificações de Transbordo**: Notificações sonoras no painel (Web Audio API) ao receber novas mensagens e alerta visual piscante com aviso sonoro sempre que um cliente solicita atendimento humano, com botão "Atender Agora".
 - 🎙️ **Compreensão de Áudios no WhatsApp**: Suporte nativo para mensagens de voz. O sistema transcreve o áudio do cliente (OpenAI Whisper ou Gemini 1.5 Flash) e a IA responde no contexto falado!
 - 📅 **Gestão de Agendamentos & Clínica**: Agenda completa de consultas estilo **Outlook / Teams**, cálculo automático de horários vagos, controle de status (*Confirmado, Pendente, Cancelado, Realizado*) e cadastro de horários de abertura, fechamento e almoço.
 - 🩺 **Catálogo de Procedimentos & Preços**: Cadastre serviços com valor, duração estimada e orientações. A IA consulta esse catálogo em tempo real para responder aos pacientes no WhatsApp.

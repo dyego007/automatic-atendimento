@@ -7,6 +7,7 @@ import { storeService } from '../services/storeService.js';
 import { appointmentService } from '../services/appointmentService.js';
 import { availabilityService } from '../services/availabilityService.js';
 import { authService } from '../services/authService.js';
+import { reminderService } from '../services/reminderService.js';
 
 export const apiRouter = Router();
 
@@ -371,6 +372,26 @@ apiRouter.patch('/appointments/:id/status', (req, res) => {
 apiRouter.delete('/appointments/:id', (req, res) => {
   const ok = appointmentService.deleteAppointment(req.params.id);
   res.json({ message: 'Agendamento removido com sucesso.', success: ok });
+});
+
+// Disparo manual de lembrete de consulta via WhatsApp
+apiRouter.post('/appointments/:id/remind', async (req, res) => {
+  try {
+    const result = await reminderService.sendManualReminder(req.params.id);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Checagem sob demanda de lembretes pendentes
+apiRouter.post('/reminders/check', async (req, res) => {
+  try {
+    const results = await reminderService.checkAndSendReminders();
+    res.json({ message: 'Verificação de lembretes concluída.', count: results.length, results });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Horários de Funcionamento da Loja
