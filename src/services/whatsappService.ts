@@ -4,6 +4,7 @@ import { availabilityService } from './availabilityService.js';
 import { appointmentService } from './appointmentService.js';
 import { aiService } from './aiService.js';
 import { storeService } from './storeService.js';
+import { audioService } from './audioService.js';
 
 export interface IncomingMessagePayload {
   storeId?: string;
@@ -11,15 +12,20 @@ export interface IncomingMessagePayload {
   jid?: string;
   customerName?: string;
   text: string;
+  isAudio?: boolean;
   source?: 'simulator' | 'evolution' | 'meta' | 'zapi' | 'baileys';
 }
 
+export interface HandleIncomingMessageResult {
+  session: ChatSession;
+  replyMessage?: ChatMessage;
+  replyAudioBuffer?: Buffer;
+  replyAudioFilename?: string;
+  ignoredDueToHuman?: boolean;
+}
+
 export class WhatsAppService {
-  public async handleIncomingMessage(payload: IncomingMessagePayload): Promise<{
-    session: ChatSession;
-    replyMessage?: ChatMessage;
-    ignoredDueToHuman?: boolean;
-  }> {
+  public async handleIncomingMessage(payload: IncomingMessagePayload): Promise<HandleIncomingMessageResult> {
     const { phone, customerName = 'Cliente WhatsApp', text, jid } = payload;
     const cleanPhone = phone.replace(/\D/g, '');
 
@@ -107,7 +113,33 @@ export class WhatsAppService {
     // Gera a resposta da IA contextualizada para o nicho desta loja
     const agendaReply = availabilityService.reply(targetStoreId, text, session, ['dentista', 'imobiliaria'].includes(niche.id) || availabilityService.isConfigured(targetStoreId));
     const botReplyText = agendaReply ?? await aiService.generateReply(text, session.messages, niche);
-    const reply = sessionService.addMessage(targetStoreId, cleanPhone, 'bot', botReplyText);
+
+    // Gera áudio com voz de secretária feminina humana se o cliente mandou áudio ou modo voz ativo
+    let replyAudioBuffer: Buffer | undefined;
+    let replyAudioFilename: string | undefined;
+
+    const voiceMode = process.env.VOICE_REPLIES || 'audio_only'; // 'audio_only' | 'always' | 'off'
+    const shouldVoiceReply = voiceMode === 'always' || (voiceMode === 'audio_only' && payload.isAudio);
+
+    if (shouldVoiceReply) {
+      try {
+        const speech = await audioService.generateSpeech(botReplyText);
+        if (speech) {
+          replyAudioBuffer = speech.audioBuffer;
+          replyAudioFilename = speech.filename;
+        }
+      } catch (voiceErr) {
+        console.error('Erro ao sintetizar resposta de voz da secretária:', voiceErr);
+      }
+    }
+
+    const reply = sessionService.addMessage(
+      targetStoreId,
+      cleanPhone,
+      'bot',
+      botReplyText,
+      replyAudioFilename ? { audioUrl: `/api/audios/${replyAudioFilename}`, isAudio: true } : undefined
+    );
 
     // Se a mensagem veio por outro canal (webhook externo), despacha
     if (payload.source !== 'baileys') {
@@ -116,7 +148,9 @@ export class WhatsAppService {
 
     return {
       session,
-      replyMessage: reply
+      replyMessage: reply,
+      replyAudioBuffer,
+      replyAudioFilename
     };
   }
 

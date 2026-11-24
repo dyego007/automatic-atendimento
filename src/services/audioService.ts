@@ -111,6 +111,155 @@ export class AudioService {
     console.log('ℹ️ Modo áudio sem chave de API externa. Processando áudio recebido.');
     return 'Olá! Recebi o seu áudio perfeitamente. Como você prefere agendar ou tirar dúvidas hoje?';
   }
+
+  /**
+   * Remove formatações markdown, símbolos e prepara o texto para leitura humana
+   * natural por voz feminina brasileira (sem leitura de caracteres especiais ou emojis).
+   */
+  public sanitizeTextForSpeech(text: string): string {
+    if (!text) return '';
+
+    let cleaned = text;
+
+    // Remove tags de formatação do WhatsApp
+    cleaned = cleaned.replace(/[*_~`]/g, '');
+
+    // Converte opções e menus para fala natural
+    cleaned = cleaned.replace(/👉?\s*Digite\s*1\s*para\s*Confirmar\s*Presença\s*✅?/gi, 'Para confirmar sua presença, responda um ou sim.');
+    cleaned = cleaned.replace(/👉?\s*Digite\s*2\s*para\s*Reagendar\s*Horário\s*🔄?/gi, 'Para mudar o horário, responda dois.');
+    cleaned = cleaned.replace(/👉?\s*Digite\s*1\s*para/gi, 'Digite um para');
+    cleaned = cleaned.replace(/👉?\s*Digite\s*2\s*para/gi, 'Digite dois para');
+
+    // Remove URLs e links
+    cleaned = cleaned.replace(/https?:\/\/\S+/g, '');
+
+    // Formata valores em reais para pronúncia correta
+    cleaned = cleaned.replace(/R\$\s*(\d+)(?:,(\d{2}))?/g, (_, int, dec) => {
+      if (dec && dec !== '00') {
+        return `${int} reais e ${dec} centavos`;
+      }
+      return `${int} reais`;
+    });
+
+    // Remove emojis e pictogramas
+    cleaned = cleaned.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '');
+
+    // Normaliza quebras de linha e múltiplos espaços
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+    return cleaned;
+  }
+
+  /**
+   * Gera áudio com voz humana ultra-realista feminina (OpenAI TTS "nova" ou ElevenLabs).
+   */
+  public async generateSpeech(
+    text: string,
+    options?: {
+      voice?: string;
+      provider?: 'elevenlabs' | 'openai';
+    }
+  ): Promise<{ audioBuffer: Buffer; filename: string; mimeType: string } | null> {
+    const speechText = this.sanitizeTextForSpeech(text);
+    if (!speechText) return null;
+
+    // 1. ElevenLabs (Voz Ultra-Humana com respiração e entonação natural)
+    const elevenKey = process.env.ELEVENLABS_API_KEY;
+    const voiceProvider = options?.provider || (elevenKey ? 'elevenlabs' : 'openai');
+
+    if (voiceProvider === 'elevenlabs' && elevenKey) {
+      try {
+        console.log('🎙️ Gerando áudio de secretária humana via ElevenLabs Multilingual v2...');
+        // Voz feminina padrão: Rachel ou ID configurado no .env
+        const voiceId = options?.voice || process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
+        const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'xi-api-key': elevenKey
+          },
+          body: JSON.stringify({
+            text: speechText,
+            model_id: 'eleven_multilingual_v2',
+            voice_settings: {
+              stability: 0.5,
+              similarity_boost: 0.85,
+              style: 0.15,
+              use_speaker_boost: true
+            }
+          })
+        });
+
+        if (response.ok) {
+          const arrayBuffer = await response.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          const filename = `voice-reply-${Date.now()}-${Math.random().toString(36).substring(2, 6)}.mp3`;
+          const filePath = path.join(this.audiosDir, filename);
+          fs.writeFileSync(filePath, buffer);
+
+          console.log(`✅ Áudio ElevenLabs gerado com sucesso! Arquivo: ${filename}`);
+          return { audioBuffer: buffer, filename, mimeType: 'audio/mp4' };
+        } else {
+          const errText = await response.text();
+          console.warn('ElevenLabs API retornou erro:', errText);
+        }
+      } catch (err) {
+        console.error('Erro ao gerar áudio com ElevenLabs:', err);
+      }
+    }
+
+    // 2. OpenAI TTS (Voz "nova" - mulher jovem, acolhedora, expressiva e profissional)
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        // Voz feminina padrão: 'nova' (a mais humana e natural em português) ou 'shimmer'
+        const voice = options?.voice || process.env.OPENAI_TTS_VOICE || 'nova';
+        console.log(`🎙️ Gerando áudio de voz humana via OpenAI TTS (Voz feminina: ${voice})...`);
+
+        const response = await fetch('https://api.openai.com/v1/audio/speech', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: process.env.OPENAI_TTS_MODEL || 'tts-1-hd',
+            voice: voice,
+            input: speechText,
+            response_format: 'mp3'
+          })
+        });
+
+        if (response.ok) {
+          const arrayBuffer = await response.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          const filename = `voice-reply-${Date.now()}-${Math.random().toString(36).substring(2, 6)}.mp3`;
+          const filePath = path.join(this.audiosDir, filename);
+          fs.writeFileSync(filePath, buffer);
+
+          console.log(`✅ Áudio OpenAI TTS gerado com sucesso! Arquivo: ${filename}`);
+          return { audioBuffer: buffer, filename, mimeType: 'audio/mp4' };
+        } else {
+          const errText = await response.text();
+          console.warn('OpenAI TTS API retornou status não-200:', errText);
+        }
+      } catch (err) {
+        console.error('Erro ao gerar áudio com OpenAI TTS:', err);
+      }
+    }
+
+    return null;
+  }
+
+  public getAudioFilePath(filename: string): string | null {
+    const safeName = path.basename(filename);
+    const fullPath = path.join(this.audiosDir, safeName);
+    if (fs.existsSync(fullPath)) {
+      return fullPath;
+    }
+    return null;
+  }
 }
 
 export const audioService = new AudioService();

@@ -768,11 +768,24 @@ async function loadActiveChatMessages(phone) {
       const time = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const formatted = m.text.replace(/\*(.*?)\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
 
+      const audioPlayerHtml = m.audioUrl
+        ? `<div class="mt-2 pt-1 border-t border-slate-300/60">
+             <div class="text-[10px] font-bold text-emerald-800 flex items-center gap-1 mb-1">
+               <i class="fas fa-microphone-alt"></i> Áudio de Voz da Secretária:
+             </div>
+             <audio controls class="w-full h-8 max-w-[240px]">
+               <source src="${m.audioUrl}" type="audio/mpeg">
+               Áudio indisponível
+             </audio>
+           </div>`
+        : '';
+
       if (m.sender === 'customer') {
         bubble.className = 'flex justify-start';
         bubble.innerHTML = `
           <div class="bg-white text-slate-800 rounded-2xl rounded-tl-none px-3.5 py-2 max-w-[80%] text-xs shadow-sm">
             <div>${formatted}</div>
+            ${audioPlayerHtml}
             <div class="text-[9px] text-slate-400 text-right mt-1">${time}</div>
           </div>
         `;
@@ -783,6 +796,7 @@ async function loadActiveChatMessages(phone) {
           <div class="bg-[#d9fdd3] text-slate-800 rounded-2xl rounded-tr-none px-3.5 py-2 max-w-[80%] text-xs shadow-sm">
             ${isAgent ? '<div class="text-[10px] font-bold text-amber-700 mb-0.5"><i class="fas fa-headset mr-1"></i>Atendente Humano</div>' : ''}
             <div>${formatted}</div>
+            ${audioPlayerHtml}
             <div class="text-[9px] text-slate-400 text-right mt-1 flex items-center justify-end gap-1">
               <span>${time}</span>
               <i class="fas fa-check-double text-blue-500"></i>
@@ -842,7 +856,7 @@ async function loadSimulatorChat() {
       const session = await res.json();
       const container = document.getElementById('simMessagesContainer');
       container.innerHTML = '';
-      session.messages.forEach(m => renderSimBubble(m.sender, m.text, m.timestamp));
+      session.messages.forEach(m => renderSimBubble(m.sender, m.text, m.timestamp, m.audioUrl));
       container.scrollTop = container.scrollHeight;
     }
   } catch (err) {
@@ -878,7 +892,7 @@ async function handleSimSubmit(e) {
     typing.classList.add('hidden');
 
     if (data.replyMessage) {
-      renderSimBubble(data.replyMessage.sender, data.replyMessage.text, data.replyMessage.timestamp);
+      renderSimBubble(data.replyMessage.sender, data.replyMessage.text, data.replyMessage.timestamp, data.replyMessage.audioUrl);
     }
   } catch (err) {
     typing.classList.add('hidden');
@@ -891,17 +905,29 @@ function sendSimText(text) {
   document.querySelector('#tab-simulator form button[type="submit"]').click();
 }
 
-function renderSimBubble(sender, text, timestamp) {
+function renderSimBubble(sender, text, timestamp, audioUrl) {
   const container = document.getElementById('simMessagesContainer');
   const wrapper = document.createElement('div');
   const time = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const formatted = text.replace(/\*(.*?)\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
+
+  const audioHtml = audioUrl
+    ? `<div class="mt-2 pt-1 border-t border-slate-200">
+         <div class="text-[9px] font-bold text-emerald-700 flex items-center gap-1 mb-0.5">
+           <i class="fas fa-microphone-alt"></i> Áudio de Voz da Secretária:
+         </div>
+         <audio controls class="w-full h-7 max-w-[210px]">
+           <source src="${audioUrl}" type="audio/mpeg">
+         </audio>
+       </div>`
+    : '';
 
   if (sender === 'customer') {
     wrapper.className = 'flex justify-end';
     wrapper.innerHTML = `
       <div class="bg-[#d9fdd3] text-slate-800 rounded-lg rounded-tr-none px-3 py-1.5 max-w-[85%] text-xs shadow-sm">
         <div>${formatted}</div>
+        ${audioHtml}
         <div class="text-[9px] text-slate-400 text-right mt-0.5">${time}</div>
       </div>
     `;
@@ -910,6 +936,7 @@ function renderSimBubble(sender, text, timestamp) {
     wrapper.innerHTML = `
       <div class="bg-white text-slate-800 rounded-lg rounded-tl-none px-3 py-1.5 max-w-[85%] text-xs shadow-sm">
         <div>${formatted}</div>
+        ${audioHtml}
         <div class="text-[9px] text-slate-400 text-right mt-0.5">${time}</div>
       </div>
     `;

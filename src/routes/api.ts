@@ -8,6 +8,7 @@ import { appointmentService } from '../services/appointmentService.js';
 import { availabilityService } from '../services/availabilityService.js';
 import { authService } from '../services/authService.js';
 import { reminderService } from '../services/reminderService.js';
+import { audioService } from '../services/audioService.js';
 
 export const apiRouter = Router();
 
@@ -310,7 +311,7 @@ apiRouter.delete('/sessions/:phone', (req, res) => {
 // --- Rota do Simulador Web ---
 apiRouter.post('/simulator/send', async (req, res) => {
   const storeId = req.body.storeId || storeService.getActiveStore().id;
-  const { phone = '5511999998888', customerName = 'Você (Simulador)', text } = req.body;
+  const { phone = '5511999998888', customerName = 'Você (Simulador)', text, isAudio = false } = req.body;
   if (!text) {
     return res.status(400).json({ error: "O campo 'text' é obrigatório." });
   }
@@ -320,10 +321,42 @@ apiRouter.post('/simulator/send', async (req, res) => {
     phone,
     customerName,
     text,
+    isAudio,
     source: 'simulator'
   });
 
   res.json(result);
+});
+
+// --- Rotas de Áudio & Text-to-Speech (Voz Humana de Secretária) ---
+apiRouter.get('/audios/:filename', (req, res) => {
+  const filePath = audioService.getAudioFilePath(req.params.filename);
+  if (!filePath) {
+    return res.status(404).json({ error: 'Arquivo de áudio não encontrado.' });
+  }
+  res.sendFile(filePath);
+});
+
+apiRouter.post('/audios/synthesize', async (req, res) => {
+  const { text, voice, provider } = req.body;
+  if (!text) {
+    return res.status(400).json({ error: "O campo 'text' é obrigatório." });
+  }
+  try {
+    const result = await audioService.generateSpeech(text, { voice, provider });
+    if (!result) {
+      return res.status(400).json({
+        error: 'Nenhuma chave de API de voz configurada (OPENAI_API_KEY ou ELEVENLABS_API_KEY no .env).'
+      });
+    }
+    res.json({
+      message: 'Áudio de voz feminina gerado com sucesso!',
+      audioUrl: `/api/audios/${result.filename}`,
+      filename: result.filename
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // --- Módulo de Agendamentos, Horários & Serviços ---

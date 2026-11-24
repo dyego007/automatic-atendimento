@@ -202,9 +202,11 @@ export class BaileysService {
         }
 
         let text = extractMessageText(msg);
+        let isAudioIncoming = false;
 
         // Se for mensagem de áudio, baixa e transcreve
         if (!text && msg.message?.audioMessage) {
+          isAudioIncoming = true;
           try {
             console.log(`🎙️ [Loja ${targetStoreId}] Áudio recebido de ${msg.pushName || 'Cliente'}. Baixando e transcrevendo...`);
             const buffer = (await downloadMediaMessage(msg, 'buffer', {})) as Buffer;
@@ -237,11 +239,30 @@ export class BaileysService {
           jid: remoteJid,
           customerName,
           text,
+          isAudio: isAudioIncoming,
           source: 'baileys'
         });
 
         // Envia resposta automática pelo socket do Baileys
-        if (result.replyMessage && instance.sock) {
+        if (result.replyAudioBuffer && instance.sock) {
+          try {
+            console.log(`🎙️ [Loja ${targetStoreId}] Gravando e enviando nota de voz PTT (voz de secretária) para ${remoteJid}...`);
+            await instance.sock.sendPresenceUpdate('recording', remoteJid);
+            await new Promise(resolve => setTimeout(resolve, 1500)); // Simula gravação humana realista
+            await instance.sock.sendMessage(remoteJid, {
+              audio: result.replyAudioBuffer,
+              mimetype: 'audio/mp4',
+              ptt: true // true = nota de voz real com microfone verde!
+            });
+            console.log(`✅ [Loja ${targetStoreId}] Nota de voz enviada com sucesso para ${remoteJid}!`);
+          } catch (audioSendErr) {
+            console.error(`❌ [Loja ${targetStoreId}] Erro ao enviar áudio no WhatsApp:`, audioSendErr);
+            // Fallback para texto se áudio falhar
+            if (result.replyMessage) {
+              await instance.sock.sendMessage(remoteJid, { text: result.replyMessage.text });
+            }
+          }
+        } else if (result.replyMessage && instance.sock) {
           try {
             console.log(`🤖 [Loja ${targetStoreId}] Enviando resposta para ${remoteJid}...`);
             await instance.sock.sendPresenceUpdate('composing', remoteJid);
@@ -279,6 +300,36 @@ export class BaileysService {
       return true;
     } catch (err) {
       console.error(`❌ [Loja ${storeId}] Erro ao enviar mensagem manual para ${targetJid}:`, err);
+      return false;
+    }
+  }
+
+  public async sendVoiceNote(storeId: string, phone: string, audioBuffer: Buffer, explicitJid?: string): Promise<boolean> {
+    const instance = this.instances.get(storeId);
+    if (!instance || !instance.sock || instance.status !== 'connected') {
+      console.warn(`[Loja ${storeId}] Não foi possível enviar áudio: WhatsApp desconectado.`);
+      return false;
+    }
+
+    const cleanPhone = phone.replace(/\D/g, '');
+    const targetJid =
+      explicitJid ||
+      instance.phoneToJid.get(cleanPhone) ||
+      (phone.includes('@') ? phone : `${cleanPhone}@s.whatsapp.net`);
+
+    try {
+      console.log(`🎙️ [Loja ${storeId}] Enviando nota de voz PTT (voz de secretária) para ${targetJid}...`);
+      await instance.sock.sendPresenceUpdate('recording', targetJid);
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      await instance.sock.sendMessage(targetJid, {
+        audio: audioBuffer,
+        mimetype: 'audio/mp4',
+        ptt: true
+      });
+      console.log(`✅ [Loja ${storeId}] Nota de voz PTT entregue com sucesso para ${targetJid}!`);
+      return true;
+    } catch (err) {
+      console.error(`❌ [Loja ${storeId}] Erro ao enviar nota de voz para ${targetJid}:`, err);
       return false;
     }
   }

@@ -3,6 +3,8 @@ export interface ChatMessage {
   sender: 'customer' | 'bot' | 'agent';
   text: string;
   timestamp: string;
+  audioUrl?: string;
+  isAudio?: boolean;
 }
 
 export interface ChatSession {
@@ -54,13 +56,21 @@ export class SessionService {
     return this.sessions.get(this.getSessionKey(storeId, phone));
   }
 
-  public addMessage(storeId: string, phone: string, sender: 'customer' | 'bot' | 'agent', text: string): ChatMessage {
+  public addMessage(
+    storeId: string,
+    phone: string,
+    sender: 'customer' | 'bot' | 'agent',
+    text: string,
+    options?: { audioUrl?: string; isAudio?: boolean }
+  ): ChatMessage {
     const session = this.getOrCreateSession(storeId, phone);
     const message: ChatMessage = {
       id: Math.random().toString(36).substring(2, 9),
       sender,
       text,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      audioUrl: options?.audioUrl,
+      isAudio: options?.isAudio || !!options?.audioUrl
     };
 
     session.messages.push(message);
