@@ -6,7 +6,24 @@ import { baileysService } from '../services/baileysService.js';
 import { storeService } from '../services/storeService.js';
 import { appointmentService } from '../services/appointmentService.js';
 
+import { availabilityService } from '../services/availabilityService.js';
+
 export const apiRouter = Router();
+
+// --- Agenda: horários explícitos por loja e data (horário de Brasília) ---
+apiRouter.get('/stores/:id/agenda', (req, res) => {
+  if (!storeService.getStore(req.params.id)) return res.status(404).json({ error: 'Loja não encontrada.' });
+  try {
+    res.json(availabilityService.getDay(req.params.id, String(req.query.date || '')));
+  } catch (err: any) { res.status(400).json({ error: err.message }); }
+});
+apiRouter.put('/stores/:id/agenda', (req, res) => {
+  if (!storeService.getStore(req.params.id)) return res.status(404).json({ error: 'Loja não encontrada.' });
+  try {
+    res.json(availabilityService.setDay(req.params.id, req.body.date, req.body.times));
+  } catch (err: any) { res.status(400).json({ error: err.message }); }
+});
+
 
 // --- Rotas de Lojas / Clientes (Multi-Tenancy) ---
 apiRouter.get('/stores', (req, res) => {
@@ -323,6 +340,6 @@ apiRouter.delete('/services/:name', (req, res) => {
 apiRouter.get('/slots', (req, res) => {
   const storeId = (req.query.storeId as string) || storeService.getActiveStore().id;
   const date = (req.query.date as string) || new Date().toISOString().split('T')[0];
-  const slots = appointmentService.getAvailableSlots(storeId, date);
+  const slots = availabilityService.available(storeId, date);
   res.json({ date, slots });
 });

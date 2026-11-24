@@ -77,3 +77,10 @@ O endpoint `POST /webhook/whatsapp` já está preparado para receber mensagens d
 1. **Evolution API**: Reconhece o evento `messages.upsert`.
 2. **Z-API**: Reconhece payloads com `phone` e `text`.
 3. **Meta WhatsApp Cloud API**: Suporta a verificação de handshake `hub.challenge`.
+
+
+## Disponibilidade por data e conversa de agendamento
+
+`src/services/availabilityService.ts` controla os horários específicos de cada loja/data e a confirmação do dia e da reserva na conversa. Ele consulta e grava reservas pelo `appointmentService.ts` existente, preservando a gestão de consultas, serviços e horários semanais. A disponibilidade específica de uma data substitui a grade semanal; uma lista vazia fecha o dia. O fuso de avaliação é `America/Sao_Paulo`.
+
+`GET/PUT /api/stores/:id/agenda` consulta e salva a disponibilidade diária. `GET /api/slots` usa a mesma disponibilidade do bot. O painel diário está em `public/agenda.js`, integrado à navegação existente. O transbordo humano continua sendo avaliado antes do fluxo de agenda. Os testes isolam as reservas com um backend em memória e não criam consultas reais.

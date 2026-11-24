@@ -90,7 +90,8 @@
         <button onclick="switchTab('niches')" id="navBtn-niches" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
           <i class="fas fa-layer-group text-sm w-4"></i> Catálogo de Nichos
         </button>
-      </nav>
+      <button id="navBtn-agenda" onclick="switchTab('agenda')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all"><i class="fas fa-calendar-alt"></i> Disponibilidade por dia</button>
+</nav>
     </div>
 
     <!-- Rodapé Sidebar -->
@@ -662,9 +663,26 @@
         </div>
       </div>
 
-    </main>
+    <div id="tab-agenda" class="hidden space-y-4">
+  <div class="bg-slate-950 border border-slate-800 p-6 rounded-2xl space-y-4">
+    <h3 class="text-base font-bold text-white">Disponibilidade por dia da loja selecionada</h3>
+    <p class="text-xs text-slate-400">Cadastre somente os horários que podem ser reservados em cada data. Exemplo: 13:00. Sem cadastro específico, vale a grade semanal de Agendamentos. Fuso: Brasília.</p>
+    <form onsubmit="saveAgendaDay(event)" class="space-y-4">
+      <div><label for="agendaDate" class="block text-xs text-slate-300 mb-1">Dia do atendimento</label><input required type="date" id="agendaDate" onchange="loadAgendaDay()" class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
+      <div><label for="agendaTimes" class="block text-xs text-slate-300 mb-1">Horários oferecidos neste dia</label><textarea id="agendaTimes" rows="3" placeholder="13:00, 14:30" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></textarea><p class="text-xs text-slate-400">Separe por vírgula ou quebra de linha. Deixe vazio e salve para fechar o dia. Horários já reservados continuam ocupados.</p></div>
+      <button id="agendaSave" class="bg-emerald-500 text-slate-950 font-bold rounded-xl px-4 py-2" type="submit">Salvar horários do dia</button>
+    </form>
+    <p id="agendaFeedback" role="status" class="text-sm text-emerald-300"></p>
+    <h4 class="font-bold text-white">Disponibilidade para o cliente</h4><p id="agendaAvailable" class="text-sm text-slate-300"></p>
+    <h4 class="font-bold text-white">Agendamentos confirmados</h4><ul id="agendaBookings" class="text-sm text-slate-300 space-y-2"></ul>
+    <button onclick="loadAgendaDay()" class="bg-slate-800 text-white rounded-xl px-4 py-2">Atualizar agenda</button>
+  </div>
+</div>
+
+</main>
   </div>
 
   <script src="/app.js"></script>
+  <script src="/agenda.js"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 import { nicheService } from './nicheService.js';
 import { sessionService, ChatSession, ChatMessage } from './sessionService.js';
+import { availabilityService } from './availabilityService.js';
 import { aiService } from './aiService.js';
 import { storeService } from './storeService.js';
 
@@ -62,7 +63,8 @@ export class WhatsAppService {
     }
 
     // Gera a resposta da IA contextualizada para o nicho desta loja
-    const botReplyText = await aiService.generateReply(text, session.messages, niche);
+    const agendaReply = availabilityService.reply(targetStoreId, text, session, ['dentista', 'imobiliaria'].includes(niche.id) || availabilityService.isConfigured(targetStoreId));
+    const botReplyText = agendaReply ?? await aiService.generateReply(text, session.messages, niche);
     const reply = sessionService.addMessage(targetStoreId, cleanPhone, 'bot', botReplyText);
 
     // Se a mensagem veio por outro canal (webhook externo), despacha

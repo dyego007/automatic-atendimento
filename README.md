@@ -62,3 +62,14 @@ Para que ambos possam codificar e evoluir o sistema sem gerar conflitos ou quebr
 1. **Antes de codificar**: sempre execute `git pull origin main`.
 2. **Após codificar**: sempre execute `git pull`, `git add .`, `git commit` e `git push origin main`.
 3. Veja o documento completo em [`WORKFLOW.md`](./WORKFLOW.md) e a arquitetura detalhada em [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
+
+## Disponibilidade por data no WhatsApp
+
+Selecione a loja e abra **Disponibilidade por dia**. Escolha a data e salve apenas os horários oferecidos (`HH:MM`, separados por vírgula ou linha). Para disponibilizar somente 13h, cadastre `13:00`. Salvar uma lista vazia fecha aquele dia. Sem um cadastro específico, a grade semanal de **Agendamentos** continua valendo, respeitando os dias de atendimento e desconsiderando horários passados no fuso de Brasília.
+
+O robô confirma a data completa, mostra as vagas livres, pede a escolha de horário e exige confirmação final antes de reservar. Na confirmação ele verifica a disponibilidade novamente. O fluxo é determinístico, anterior ao provedor de IA, e funciona também no modo mock. Está ativo em dentista/imobiliária e nas demais lojas com disponibilidade por dia cadastrada.
+
+As reservas usam o mesmo `appointmentService` da gestão existente: consultas cadastradas pelo painel bloqueiam a vaga no bot, e reservas do bot aparecem em **Agendamentos**. Cancelamentos pelo painel liberam a vaga. Os horários específicos ficam em `data/appointments.json` (ignorado pelo Git); as consultas seguem o armazenamento já utilizado pela agenda existente. Não há sincronização com agenda externa nem coordenação entre múltiplas instâncias. Cada horário representa uma vaga, sem cálculo de sobreposição por duração ou profissional.
+
+Verificações: `node --import tsx --test tests/appointment.test.ts`, `npm run build`, `node --check public/agenda.js` e `node --check public/app.js`.

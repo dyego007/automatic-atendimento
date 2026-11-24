@@ -26,8 +26,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Navegação entre Abas
 function switchTab(tabId) {
-  const tabs = ['stores', 'dashboard', 'livechat', 'appointments', 'simulator', 'niches'];
+  const tabs = ['stores', 'dashboard', 'livechat', 'appointments', 'simulator', 'niches', 'agenda'];
   const titles = {
+    agenda: 'Disponibilidade por dia',
     stores: '<i class="fas fa-store text-emerald-400"></i> Minhas Lojas & Clientes Cadastrados',
     dashboard: '<i class="fas fa-qrcode text-emerald-400"></i> Conexão QR Code & Visão Geral',
     livechat: '<i class="fas fa-comments text-emerald-400"></i> Conversas ao Vivo (WhatsApp Web)',
@@ -50,6 +51,7 @@ function switchTab(tabId) {
 
   document.getElementById('pageTitle').innerHTML = titles[tabId];
 
+  if (tabId === 'agenda') loadAgendaDay();
   if (tabId === 'stores') {
     loadStores();
   } else if (tabId === 'livechat') {
@@ -197,6 +199,7 @@ async function refreshActiveStoreData() {
   await loadStoreStats(currentStore.id);
   await loadNicheForActiveStore(currentStore.nicheId);
   await loadSimulatorChat();
+  if (!document.getElementById('tab-agenda').classList.contains('hidden')) await loadAgendaDay();
 }
 
 function updateStoreUI() {
