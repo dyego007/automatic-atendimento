@@ -10,6 +10,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { whatsappService } from './whatsappService.js';
+import { storeService } from './storeService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,42 +23,85 @@ export interface WhatsAppUserInfo {
   name?: string;
 }
 
+export interface StoreWhatsAppInstance {
+  storeId: string;
+  sock: WASocket | null;
+  status: WhatsAppConnectionStatus;
+  qrCodeBase64: string | null;
+  user: WhatsAppUserInfo | null;
+  reconnectAttempts: number;
+}
+
 export class BaileysService {
-  private sock: WASocket | null = null;
-  private authDir: string;
-  private status: WhatsAppConnectionStatus = 'disconnected';
-  private qrCodeBase64: string | null = null;
-  private user: WhatsAppUserInfo | null = null;
-  private reconnectAttempts = 0;
+  private baseAuthDir: string;
+  private instances: Map<string, StoreWhatsAppInstance> = new Map();
 
   constructor() {
-    this.authDir = path.resolve(__dirname, '../../data/auth_session');
+    this.baseAuthDir = path.resolve(__dirname, '../../data/auth_session');
   }
 
-  public getStatus() {
+  private getOrCreateInstance(storeId: string): StoreWhatsAppInstance {
+    let instance = this.instances.get(storeId);
+    if (!instance) {
+      instance = {
+        storeId,
+        sock: null,
+        status: 'disconnected',
+        qrCodeBase64: null,
+        user: null,
+        reconnectAttempts: 0
+      };
+      this.instances.set(storeId, instance);
+    }
+    return instance;
+  }
+
+  public getStatus(storeId?: string) {
+    const targetStoreId = storeId || storeService.getActiveStore().id;
+    const instance = this.getOrCreateInstance(targetStoreId);
+
     return {
-      status: this.status,
-      qr: this.qrCodeBase64,
-      user: this.user,
-      reconnectAttempts: this.reconnectAttempts
+      storeId: targetStoreId,
+      status: instance.status,
+      qr: instance.qrCodeBase64,
+      user: instance.user,
+      reconnectAttempts: instance.reconnectAttempts
     };
   }
 
-  public async connect(): Promise<void> {
-    if (this.status === 'connected') {
+  public getAllStatuses() {
+    const stores = storeService.listStores();
+    return stores.map(store => {
+      const instance = this.getOrCreateInstance(store.id);
+      return {
+        storeId: store.id,
+        storeName: store.name,
+        nicheId: store.nicheId,
+        status: instance.status,
+        hasQr: !!instance.qrCodeBase64,
+        user: instance.user
+      };
+    });
+  }
+
+  public async connect(storeId?: string): Promise<void> {
+    const targetStoreId = storeId || storeService.getActiveStore().id;
+    const instance = this.getOrCreateInstance(targetStoreId);
+
+    if (instance.status === 'connected') {
       return;
     }
 
-    if (!fs.existsSync(this.authDir)) {
-      fs.mkdirSync(this.authDir, { recursive: true });
+    const storeAuthDir = path.join(this.baseAuthDir, targetStoreId);
+    if (!fs.existsSync(storeAuthDir)) {
+      fs.mkdirSync(storeAuthDir, { recursive: true });
     }
 
-    this.status = 'connecting';
-    const { state, saveCreds } = await useMultiFileAuthState(this.authDir);
-
+    instance.status = 'connecting';
+    const { state, saveCreds } = await useMultiFileAuthState(storeAuthDir);
     const logger = pino({ level: 'silent' });
 
-    this.sock = makeWASocket({
+    const sock = makeWASocket({
       auth: state,
       printQRInTerminal: false,
       logger,
@@ -65,81 +109,77 @@ export class BaileysService {
       syncFullHistory: false
     });
 
-    this.sock.ev.on('creds.update', saveCreds);
+    instance.sock = sock;
 
-    this.sock.ev.on('connection.update', async (update) => {
+    sock.ev.on('creds.update', saveCreds);
+
+    sock.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update;
 
       if (qr) {
         try {
-          this.qrCodeBase64 = await QRCode.toDataURL(qr, {
+          instance.qrCodeBase64 = await QRCode.toDataURL(qr, {
             margin: 2,
             scale: 8,
-            color: {
-              dark: '#0f172a',
-              light: '#ffffff'
-            }
+            color: { dark: '#0f172a', light: '#ffffff' }
           });
-          this.status = 'connecting';
-          console.log('📲 Novo QR Code do WhatsApp gerado para leitura no painel.');
+          instance.status = 'connecting';
+          console.log(`📲 [Loja ${targetStoreId}] Novo QR Code gerado para conexão.`);
         } catch (err) {
-          console.error('Erro ao converter QR Code para base64:', err);
+          console.error(`Erro ao converter QR da loja ${targetStoreId}:`, err);
         }
       }
 
       if (connection === 'close') {
         const statusCode = (lastDisconnect?.error as any)?.output?.statusCode;
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-        this.status = 'disconnected';
-        this.qrCodeBase64 = null;
-        this.user = null;
+        instance.status = 'disconnected';
+        instance.qrCodeBase64 = null;
+        instance.user = null;
 
-        console.log(`⚠️ Conexão WhatsApp fechada. Código: ${statusCode}. Reconectar: ${shouldReconnect}`);
+        console.log(`⚠️ [Loja ${targetStoreId}] Conexão fechada. Reconectar: ${shouldReconnect}`);
 
         if (shouldReconnect) {
-          this.reconnectAttempts++;
-          setTimeout(() => this.connect(), 4000);
+          instance.reconnectAttempts++;
+          setTimeout(() => this.connect(targetStoreId), 4000);
         } else {
-          // Deslogado explicitamente, limpa sessão
           try {
-            if (fs.existsSync(this.authDir)) {
-              fs.rmSync(this.authDir, { recursive: true, force: true });
+            if (fs.existsSync(storeAuthDir)) {
+              fs.rmSync(storeAuthDir, { recursive: true, force: true });
             }
           } catch (e) {
-            console.error('Erro ao limpar pasta de auth:', e);
+            console.error('Erro ao limpar pasta de auth da loja:', e);
           }
         }
       } else if (connection === 'open') {
-        this.status = 'connected';
-        this.qrCodeBase64 = null;
-        this.reconnectAttempts = 0;
+        instance.status = 'connected';
+        instance.qrCodeBase64 = null;
+        instance.reconnectAttempts = 0;
 
-        const rawId = this.sock?.user?.id || '';
+        const rawId = sock?.user?.id || '';
         const cleanPhone = rawId.split(':')[0] || rawId.replace(/\D/g, '');
 
-        this.user = {
+        instance.user = {
           id: rawId,
           phone: cleanPhone,
-          name: this.sock?.user?.name || 'WhatsApp Conectado'
+          name: sock?.user?.name || `Loja ${targetStoreId}`
         };
 
-        console.log(`✅ WhatsApp conectado com sucesso! Número: ${this.user.phone}`);
+        console.log(`✅ [Loja ${targetStoreId}] WhatsApp Conectado com sucesso! Número: ${instance.user.phone}`);
       }
     });
 
-    // Escuta de mensagens recebidas
-    this.sock.ev.on('messages.upsert', async (m) => {
+    // Escuta de mensagens recebidas nesta instância
+    sock.ev.on('messages.upsert', async (m) => {
       if (m.type !== 'notify') return;
 
       for (const msg of m.messages) {
-        // Ignora mensagens do próprio bot ou mensagens de status
         if (msg.key.fromMe || !msg.message || msg.key.remoteJid === 'status@broadcast') {
           continue;
         }
 
         const remoteJid = msg.key.remoteJid;
         if (!remoteJid || remoteJid.includes('@g.us')) {
-          // Por padrão ignora grupos para focar em atendimento 1 a 1
           continue;
         }
 
@@ -153,49 +193,56 @@ export class BaileysService {
 
         if (!text) continue;
 
-        console.log(`📩 Mensagem recebida de ${customerName} (${phone}): "${text}"`);
+        console.log(`📩 [Loja ${targetStoreId}] Mensagem de ${customerName} (${phone}): "${text}"`);
 
-        // Processa pelo serviço de atendimento
+        // Processa a mensagem pelo serviço de atendimento daquela loja
         const result = await whatsappService.handleIncomingMessage({
+          storeId: targetStoreId,
           phone,
           customerName,
           text,
           source: 'baileys'
         });
 
-        // Se houver resposta gerada pela IA, envia de volta pelo Baileys
-        if (result.replyMessage && this.sock) {
-          await this.sock.sendMessage(remoteJid, {
+        // Se houver resposta gerada pela IA, envia pelo socket daquela loja
+        if (result.replyMessage && instance.sock) {
+          await instance.sock.sendMessage(remoteJid, {
             text: result.replyMessage.text
           });
-          console.log(`🤖 Resposta enviada para ${phone}: "${result.replyMessage.text.slice(0, 50)}..."`);
         }
       }
     });
   }
 
-  public async sendMessage(phone: string, text: string): Promise<boolean> {
-    if (!this.sock || this.status !== 'connected') {
+  public async sendMessage(storeId: string, phone: string, text: string): Promise<boolean> {
+    const instance = this.instances.get(storeId);
+    if (!instance || !instance.sock || instance.status !== 'connected') {
       return false;
     }
     const jid = `${phone.replace(/\D/g, '')}@s.whatsapp.net`;
-    await this.sock.sendMessage(jid, { text });
+    await instance.sock.sendMessage(jid, { text });
     return true;
   }
 
-  public async disconnect(): Promise<void> {
+  public async disconnect(storeId?: string): Promise<void> {
+    const targetStoreId = storeId || storeService.getActiveStore().id;
+    const instance = this.instances.get(targetStoreId);
+    if (!instance) return;
+
     try {
-      if (this.sock) {
-        await this.sock.logout();
+      if (instance.sock) {
+        await instance.sock.logout();
       }
-      this.status = 'disconnected';
-      this.qrCodeBase64 = null;
-      this.user = null;
-      if (fs.existsSync(this.authDir)) {
-        fs.rmSync(this.authDir, { recursive: true, force: true });
+      instance.status = 'disconnected';
+      instance.qrCodeBase64 = null;
+      instance.user = null;
+
+      const storeAuthDir = path.join(this.baseAuthDir, targetStoreId);
+      if (fs.existsSync(storeAuthDir)) {
+        fs.rmSync(storeAuthDir, { recursive: true, force: true });
       }
     } catch (err) {
-      console.error('Erro ao desconectar WhatsApp:', err);
+      console.error(`Erro ao desconectar loja ${targetStoreId}:`, err);
     }
   }
 }

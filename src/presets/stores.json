@@ -1,0 +1,14 @@
+[
+  {
+    "id": "loja-1",
+    "name": "Clínica OdontoVida (Matriz)",
+    "nicheId": "dentista",
+    "createdAt": "2026-11-24T12:22:49.480Z"
+  },
+  {
+    "id": "loja-2",
+    "name": "Disk Bebidas Express",
+    "nicheId": "distribuidora",
+    "createdAt": "2026-11-24T12:22:49.486Z"
+  }
+]

@@ -64,6 +64,14 @@ export class NicheService {
     return Array.from(this.nichesCache.values());
   }
 
+  public getNiche(id: string): NicheConfig {
+    const niche = this.nichesCache.get(id);
+    if (!niche) {
+      return this.getActiveNiche();
+    }
+    return niche;
+  }
+
   public getActiveNiche(): NicheConfig {
     const niche = this.nichesCache.get(this.activeNicheId);
     if (!niche) {

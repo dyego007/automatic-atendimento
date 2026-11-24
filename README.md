@@ -6,7 +6,8 @@ Sistema inteligente e modular de atendimento automatizado via **WhatsApp**, proj
 
 ## ✨ Principais Funcionalidades
 
-- 📲 **Conexão Real por QR Code (Baileys Nativo)**: Escaneie o QR Code na tela pelo aplicativo do WhatsApp do seu celular (*Aparelhos Conectados*) e comece a atender contatos reais imediatamente!
+- 🏢 **Multi-Lojas / Multi-Comércios (Multi-Tenancy)**: Cadastre quantos comércios e clientes você quiser! Cada loja tem seu próprio número de WhatsApp, seu próprio QR Code isolado e seu catálogo de produtos e serviços.
+- 📲 **Conexão Real por QR Code (Baileys Multi-Instâncias)**: Escaneie o QR Code individual de cada loja pelo WhatsApp de cada aparelho (*Aparelhos Conectados*) para ativar o robô naquele número específico.
 - 📊 **Painel SaaS Moderno & Intuitivo**: Dashboard profissional com métricas em tempo real, status da conexão, conversas ativas e transbordo.
 - 💬 **Live Chat (Estilo WhatsApp Web)**: Visualize todas as conversas recebidas pelo robô e assuma o atendimento humano com 1 clique quando necessário.
 - 🔄 **Multi-Nicho Instantâneo**: Alterne entre **Dentista**, **Distribuidora**, **Imobiliária** ou crie seu próprio nicho com 1 clique.

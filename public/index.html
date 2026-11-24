@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AutoAtendimento AI — WhatsApp Multi-Nicho</title>
+  <title>AutoAtendimento AI — Multi-Lojas & WhatsApp</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,21 +15,6 @@
         extend: {
           fontFamily: {
             sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#ecfdf5',
-              100: '#d1fae5',
-              500: '#10b981',
-              600: '#059669',
-              700: '#047857',
-            },
-            wa: {
-              light: '#25D366',
-              dark: '#075E54',
-              teal: '#128C7E',
-              bg: '#EFEAE2'
-            }
           }
         }
       }
@@ -66,27 +51,29 @@
         </div>
         <div>
           <h1 class="text-sm font-extrabold tracking-tight text-white flex items-center gap-1.5">
-            AutoAtende <span class="bg-emerald-500/20 text-emerald-400 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">PRO</span>
+            AutoAtende <span class="bg-emerald-500/20 text-emerald-400 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">MULTI-LOJAS</span>
           </h1>
-          <p class="text-[11px] text-slate-400">Atendimento Multi-Nicho</p>
+          <p class="text-[11px] text-slate-400">Gestão de Múltiplos Comércios</p>
         </div>
       </div>
 
-      <!-- Status WhatsApp Rápido na Sidebar -->
+      <!-- Status da Loja Selecionada -->
       <div class="p-4 mx-3 my-4 rounded-xl bg-slate-900 border border-slate-800">
-        <div class="flex items-center justify-between text-xs mb-1.5">
-          <span class="text-slate-400 font-medium">WhatsApp Real:</span>
+        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Loja em Foco:</div>
+        <div id="sideActiveStoreName" class="text-xs font-bold text-white truncate">Carregando...</div>
+        <div class="flex items-center justify-between text-xs mt-2 pt-2 border-t border-slate-800">
+          <span class="text-slate-400 text-[11px]">WhatsApp:</span>
           <span id="sideWaStatusBadge" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-400">
             <span class="w-2 h-2 rounded-full bg-rose-500"></span> Desconectado
           </span>
-        </div>
-        <div id="sideWaPhone" class="text-xs font-mono font-semibold text-slate-200 truncate">
-          Nenhum aparelho
         </div>
       </div>
 
       <!-- Links de Navegação -->
       <nav class="px-3 space-y-1">
+        <button onclick="switchTab('stores')" id="navBtn-stores" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
+          <i class="fas fa-store text-sm w-4"></i> Minhas Lojas / Clientes
+        </button>
         <button onclick="switchTab('dashboard')" id="navBtn-dashboard" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 transition-all">
           <i class="fas fa-qrcode text-sm w-4"></i> Conexão QR Code
         </button>
@@ -98,15 +85,15 @@
           <i class="fas fa-mobile-alt text-sm w-4"></i> Simulador Virtual
         </button>
         <button onclick="switchTab('niches')" id="navBtn-niches" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
-          <i class="fas fa-layer-group text-sm w-4"></i> Gerenciar Nichos
+          <i class="fas fa-layer-group text-sm w-4"></i> Catálogo de Nichos
         </button>
       </nav>
     </div>
 
     <!-- Rodapé Sidebar -->
     <div class="p-4 border-t border-slate-800/80 text-[11px] text-slate-500 flex items-center justify-between">
-      <span>v2.0 Baileys Native</span>
-      <span class="inline-flex items-center gap-1 text-emerald-400"><i class="fas fa-circle text-[7px]"></i> API Online</span>
+      <span>Multi-Tenancy 2.0</span>
+      <span class="inline-flex items-center gap-1 text-emerald-400"><i class="fas fa-circle text-[7px]"></i> Baileys Ready</span>
     </div>
   </aside>
 
@@ -117,20 +104,23 @@
     <header class="h-16 border-b border-slate-800 bg-slate-950/60 backdrop-blur px-6 flex items-center justify-between gap-4 sticky top-0 z-40">
       <div class="flex items-center gap-4">
         <h2 id="pageTitle" class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-          <i class="fas fa-qrcode text-emerald-400"></i> Conexão WhatsApp & Visão Geral
+          <i class="fas fa-qrcode text-emerald-400"></i> Conexão QR Code & Visão Geral
         </h2>
       </div>
 
-      <!-- Seletor de Nicho Global no Topo -->
+      <!-- Seletor Rápido de Loja / Cliente no Topo -->
       <div class="flex items-center gap-3">
         <div class="flex items-center bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-1.5 shadow-sm">
           <span class="text-xs text-slate-400 mr-2 flex items-center gap-1.5 font-medium">
-            <i class="fas fa-store text-emerald-400"></i> Nicho Ativo:
+            <i class="fas fa-building text-emerald-400"></i> Loja Ativa:
           </span>
-          <select id="globalNicheSelect" onchange="changeActiveNiche(this.value)" class="bg-transparent text-emerald-400 font-bold text-xs focus:outline-none cursor-pointer">
-            <option value="">Carregando...</option>
+          <select id="topStoreSelect" onchange="changeActiveStore(this.value)" class="bg-transparent text-emerald-400 font-bold text-xs focus:outline-none cursor-pointer">
+            <option value="">Carregando lojas...</option>
           </select>
         </div>
+        <button onclick="switchTab('stores')" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
+          <i class="fas fa-plus"></i> Nova Loja
+        </button>
       </div>
     </header>
 
@@ -138,21 +128,83 @@
     <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
 
       <!-- ========================================== -->
+      <!-- ABA 0: MINHAS LOJAS / CLIENTES (MULTI-TENANT) -->
+      <!-- ========================================== -->
+      <div id="tab-stores" class="hidden space-y-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950 p-6 rounded-2xl border border-slate-800">
+          <div>
+            <h3 class="text-lg font-bold text-white">Lojas e Clientes Cadastrados</h3>
+            <p class="text-xs text-slate-400 mt-1">
+              Cada loja possui seu próprio número de WhatsApp, seu próprio QR Code e seu nicho de atendimento exclusivo.
+            </p>
+          </div>
+          <button onclick="openNewStoreModal()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
+            <i class="fas fa-plus"></i> Cadastrar Nova Loja / Comércio
+          </button>
+        </div>
+
+        <!-- Grid de Lojas -->
+        <div id="storesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div class="text-center py-12 text-slate-500 text-xs col-span-3">Carregando lojas...</div>
+        </div>
+
+        <!-- Modal / Card de Criação de Nova Loja -->
+        <div id="newStoreCard" class="hidden bg-slate-950 border border-emerald-500/30 p-6 rounded-2xl space-y-4">
+          <h4 class="text-sm font-bold text-white flex items-center gap-2">
+            <i class="fas fa-store text-emerald-400"></i> Adicionar Nova Loja / Cliente
+          </h4>
+          <form onsubmit="handleCreateStore(event)" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1">Nome do Comércio / Cliente</label>
+                <input type="text" id="newStoreName" placeholder="Ex: Hamburgueria do Chefe, Consultório Dra. Ana" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-emerald-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1">Nicho de Atuação (Comportamento da IA)</label>
+                <select id="newStoreNiche" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-emerald-400 focus:border-emerald-500 focus:outline-none">
+                  <!-- Carregado via JS -->
+                </select>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 pt-2">
+              <button type="submit" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl transition">
+                Salvar e Criar Loja
+              </button>
+              <button type="button" onclick="document.getElementById('newStoreCard').classList.add('hidden')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl transition">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
       <!-- ABA 1: CONEXÃO QR CODE & VISÃO GERAL -->
       <!-- ========================================== -->
       <div id="tab-dashboard" class="space-y-6">
 
-        <!-- Banner de Status com o QR Code -->
+        <!-- Banner de Loja Atual -->
+        <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-slate-950 border border-emerald-500/20 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Loja Selecionada:</div>
+            <h3 class="text-base font-extrabold text-white" id="dashBannerStoreName">Carregando...</h3>
+            <p class="text-xs text-slate-400" id="dashBannerNicheName">Nicho: Dentista</p>
+          </div>
+          <button onclick="switchTab('stores')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+            <i class="fas fa-exchange-alt"></i> Trocar de Loja
+          </button>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
           <!-- Card do QR Code -->
-          <div class="lg:col-span-7 bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
+          <div class="lg:col-span-7 bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
             <div class="flex items-center justify-between mb-4">
               <div>
                 <h3 class="text-base font-bold text-white flex items-center gap-2">
                   <i class="fab fa-whatsapp text-emerald-400 text-lg"></i> Conectar Aparelho de WhatsApp
                 </h3>
-                <p class="text-xs text-slate-400 mt-0.5">Escaneie o código QR com o celular para ativar o robô</p>
+                <p class="text-xs text-slate-400 mt-0.5">Escaneie com o celular desta loja específica</p>
               </div>
               <div id="waStatusBadgeTop" class="px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-rose-500"></span> Desconectado
@@ -166,25 +218,25 @@
               <div id="qrCodeContainer" class="w-64 h-64 bg-white p-3 rounded-2xl shadow-2xl flex items-center justify-center border-4 border-emerald-500/30">
                 <div class="text-center p-4">
                   <i class="fas fa-qrcode text-5xl text-slate-300 mb-2"></i>
-                  <p class="text-xs text-slate-500">Clique no botão abaixo para gerar o QR Code de leitura.</p>
+                  <p class="text-xs text-slate-500">Clique para gerar o QR Code desta loja.</p>
                 </div>
               </div>
 
               <!-- Instruções de Conexão -->
               <div class="space-y-3 max-w-xs text-xs">
-                <div class="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Passo a passo no celular:</div>
+                <div class="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Passo a passo no celular da loja:</div>
                 <ol class="space-y-2 text-slate-400 list-decimal list-inside">
-                  <li>Abra o aplicativo do <strong class="text-slate-200">WhatsApp</strong>.</li>
-                  <li>Toque em <strong class="text-slate-200">Mais opções (⋮)</strong> ou <strong class="text-slate-200">Configurações</strong>.</li>
-                  <li>Selecione <strong class="text-slate-200">Aparelhos Conectados</strong>.</li>
-                  <li>Toque em <strong class="text-slate-200">Conectar um Aparelho</strong> e aponte a câmera para este QR Code.</li>
+                  <li>Abra o <strong class="text-slate-200">WhatsApp</strong> no aparelho do comércio.</li>
+                  <li>Acesse <strong class="text-slate-200">Aparelhos Conectados</strong>.</li>
+                  <li>Toque em <strong class="text-slate-200">Conectar um Aparelho</strong>.</li>
+                  <li>Aponte a câmera para o QR Code ao lado.</li>
                 </ol>
 
                 <div class="pt-2 flex flex-wrap gap-2">
-                  <button id="btnConnectWa" onclick="connectWhatsApp()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2">
+                  <button id="btnConnectWa" onclick="connectActiveStoreWhatsApp()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2">
                     <i class="fas fa-sync-alt"></i> Gerar / Atualizar QR Code
                   </button>
-                  <button id="btnDisconnectWa" onclick="disconnectWhatsApp()" class="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold rounded-xl text-xs transition-all hidden flex items-center gap-2">
+                  <button id="btnDisconnectWa" onclick="disconnectActiveStoreWhatsApp()" class="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold rounded-xl text-xs transition-all hidden flex items-center gap-2">
                     <i class="fas fa-power-off"></i> Desconectar
                   </button>
                 </div>
@@ -194,26 +246,25 @@
 
             <div class="text-[11px] text-slate-500 flex items-center gap-2">
               <i class="fas fa-shield-alt text-emerald-400"></i>
-              A sessão é salva localmente e protegida. Reconexão automática em caso de queda de rede.
+              Sessão isolada. Outras lojas cadastradas continuam operando normalmente de forma independente.
             </div>
           </div>
 
-          <!-- Card de Métricas & Resumo do Negócio -->
+          <!-- Card de Métricas & Resumo -->
           <div class="lg:col-span-5 space-y-4 flex flex-col justify-between">
             
-            <!-- Cards de Números -->
             <div class="grid grid-cols-2 gap-4">
               <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                <div class="text-[11px] text-slate-400 font-medium">Total de Atendimentos</div>
+                <div class="text-[11px] text-slate-400 font-medium">Atendimentos Desta Loja</div>
                 <div id="statTotal" class="text-2xl font-extrabold text-white mt-1">0</div>
                 <div class="text-[10px] text-emerald-400 mt-1 flex items-center gap-1">
-                  <i class="fas fa-arrow-up"></i> Conversas ativas
+                  <i class="fas fa-check"></i> Conversas registradas
                 </div>
               </div>
               <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                <div class="text-[11px] text-slate-400 font-medium">Resolvidos pela IA</div>
+                <div class="text-[11px] text-slate-400 font-medium">Respondidos por IA</div>
                 <div id="statBot" class="text-2xl font-extrabold text-emerald-400 mt-1">0</div>
-                <div class="text-[10px] text-slate-500 mt-1">Sem intervenção humana</div>
+                <div class="text-[10px] text-slate-500 mt-1">Atendimento 100% automático</div>
               </div>
               <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
                 <div class="text-[11px] text-slate-400 font-medium">Transbordo Humano</div>
@@ -221,20 +272,20 @@
                 <div class="text-[10px] text-slate-500 mt-1">Assumidos por atendente</div>
               </div>
               <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                <div class="text-[11px] text-slate-400 font-medium">Total de Mensagens</div>
+                <div class="text-[11px] text-slate-400 font-medium">Mensagens Trocadas</div>
                 <div id="statMessages" class="text-2xl font-extrabold text-teal-400 mt-1">0</div>
-                <div class="text-[10px] text-slate-500 mt-1">Trocadas com clientes</div>
+                <div class="text-[10px] text-slate-500 mt-1">Neste estabelecimento</div>
               </div>
             </div>
 
-            <!-- Card do Nicho Atual em Operação -->
+            <!-- Resumo da Persona Ativa -->
             <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl flex-1 flex flex-col justify-between">
               <div>
                 <div class="flex items-center justify-between mb-2">
                   <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full" id="dashNicheCategory">Categoria</span>
-                  <span class="text-xs font-mono text-slate-500" id="dashNicheId">id: dentista</span>
+                  <span class="text-xs font-mono text-slate-500" id="dashNicheId">nicho: dentista</span>
                 </div>
-                <h4 class="text-base font-bold text-white" id="dashNicheName">Nome da Empresa</h4>
+                <h4 class="text-base font-bold text-white" id="dashNicheName">Nome do Nicho</h4>
                 <p class="text-xs text-slate-400 mt-1 line-clamp-2" id="dashNicheDesc">Descrição do nicho...</p>
               </div>
 
@@ -256,26 +307,21 @@
       <div id="tab-livechat" class="hidden">
         <div class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl h-[700px] flex flex-col md:flex-row">
           
-          <!-- Coluna Esquerda: Lista de Conversas -->
           <div class="w-full md:w-80 border-r border-slate-800 flex flex-col bg-slate-950">
-            <!-- Topo da lista -->
             <div class="p-3.5 border-b border-slate-800 flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-200">Conversas Recentes</span>
+              <span class="text-xs font-bold text-slate-200">Conversas da Loja</span>
               <button onclick="loadLiveSessions()" title="Atualizar" class="text-xs text-slate-400 hover:text-white p-1">
                 <i class="fas fa-sync-alt"></i>
               </button>
             </div>
             
-            <!-- Lista com Scroll -->
             <div id="chatListContainer" class="flex-1 overflow-y-auto custom-scroll divide-y divide-slate-800/60">
               <div class="text-center py-12 text-slate-500 text-xs">Carregando conversas...</div>
             </div>
           </div>
 
-          <!-- Coluna Direita: Janela de Chat Ativa -->
           <div class="flex-1 flex flex-col bg-[#0b141a]">
             
-            <!-- Topo do Chat Ativo -->
             <div class="h-16 bg-[#202c33] px-4 flex items-center justify-between border-b border-slate-800">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-slate-300 font-bold">
@@ -287,7 +333,6 @@
                 </div>
               </div>
 
-              <!-- Ações da Conversa -->
               <div id="activeChatActions" class="flex items-center gap-2 hidden">
                 <span id="activeChatStatusBadge" class="text-[11px] px-2.5 py-0.5 rounded-full font-semibold bg-emerald-500/20 text-emerald-400">
                   IA Ativa
@@ -298,19 +343,17 @@
               </div>
             </div>
 
-            <!-- Área de Mensagens (Fundo WhatsApp) -->
             <div id="liveChatMessages" class="flex-1 p-4 overflow-y-auto custom-scroll wa-wallpaper space-y-3">
               <div class="h-full flex items-center justify-center text-slate-500 text-xs">
-                Selecione um contato na lista ao lado para ver o histórico e responder.
+                Selecione um contato na lista para ver o histórico e responder.
               </div>
             </div>
 
-            <!-- Input de Envio de Mensagem pelo Atendente -->
             <form id="liveChatForm" onsubmit="sendAgentLiveMessage(event)" class="bg-[#202c33] p-3 flex items-center gap-2 border-t border-slate-800 hidden">
               <input 
                 type="text" 
                 id="agentInputText" 
-                placeholder="Escreva uma mensagem como atendente..." 
+                placeholder="Escreva uma mensagem como atendente humano desta loja..." 
                 class="flex-1 bg-[#2a3942] text-white placeholder-slate-400 text-xs px-4 py-2.5 rounded-xl border border-transparent focus:border-emerald-500 focus:outline-none"
               />
               <button type="submit" class="w-10 h-10 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 flex items-center justify-center font-bold transition">
@@ -324,18 +367,17 @@
       </div>
 
       <!-- ========================================== -->
-      <!-- ABA 3: SIMULADOR VIRTUAL (TESTES RÁPIDOS) -->
+      <!-- ABA 3: SIMULADOR VIRTUAL -->
       <!-- ========================================== -->
       <div id="tab-simulator" class="hidden">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          <!-- Guia de Teste -->
           <div class="lg:col-span-5 bg-slate-950 border border-slate-800 p-5 rounded-2xl space-y-4">
             <h3 class="text-sm font-bold text-white flex items-center gap-2">
-              <i class="fas fa-flask text-teal-400"></i> Testar sem Celular
+              <i class="fas fa-flask text-teal-400"></i> Testar Loja no Simulador
             </h3>
             <p class="text-xs text-slate-400">
-              O simulador envia mensagens para o mesmo motor de IA e presets que o WhatsApp real utiliza. Use para validar as respostas antes de subir para produção.
+              O simulador responde exatamente com a persona e produtos da loja selecionada no topo.
             </p>
 
             <div class="space-y-2">
@@ -344,17 +386,15 @@
                 <button onclick="sendSimText('Olá! Como funciona?')" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-lg transition">"Olá! Como funciona?"</button>
                 <button onclick="sendSimText('Quais os preços e serviços?')" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-lg transition">"Quais os preços?"</button>
                 <button onclick="sendSimText('Qual o endereço e horário de vocês?')" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-lg transition">"Endereço e horário"</button>
-                <button onclick="sendSimText('Quero agendar ou fazer um pedido agora')" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-lg transition">"Fazer pedido / Agendar"</button>
+                <button onclick="sendSimText('Quero agendar ou fazer um pedido')" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-lg transition">"Fazer pedido / Agendar"</button>
                 <button onclick="sendSimText('Quero falar com uma pessoa de verdade')" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-3 py-1.5 rounded-lg transition">"Falar com atendente"</button>
               </div>
             </div>
           </div>
 
-          <!-- Celular Virtual -->
           <div class="lg:col-span-7 flex justify-center">
             <div class="w-full max-w-sm bg-slate-950 rounded-[36px] shadow-2xl border-4 border-slate-800 overflow-hidden flex flex-col h-[620px]">
               
-              <!-- Header do WhatsApp no Celular -->
               <div class="bg-[#075e54] text-white p-3.5 flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
@@ -372,7 +412,6 @@
                 </button>
               </div>
 
-              <!-- Mensagens do Celular -->
               <div id="simMessagesContainer" class="flex-1 p-3 overflow-y-auto custom-scroll wa-wallpaper space-y-2">
                 <div class="text-center">
                   <span class="bg-emerald-100 text-emerald-950 text-[10px] font-semibold px-2 py-0.5 rounded shadow-sm">
@@ -381,12 +420,10 @@
                 </div>
               </div>
 
-              <!-- Digitando -->
               <div id="simTyping" class="hidden px-3 py-1 text-[11px] text-slate-600 italic bg-[#efeae2]">
                 <i class="fas fa-circle-notch fa-spin text-emerald-600 mr-1"></i> digitando...
               </div>
 
-              <!-- Input -->
               <form onsubmit="handleSimSubmit(event)" class="bg-[#f0f2f5] p-2 flex items-center gap-1.5">
                 <input 
                   type="text" 
@@ -412,22 +449,19 @@
         <div class="bg-slate-950 border border-slate-800 p-6 rounded-2xl space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="text-base font-bold text-white">Configuração dos Nichos de Mercado</h3>
-              <p class="text-xs text-slate-400">Edite as regras do nicho ativo ou crie um novo para seu cliente</p>
+              <h3 class="text-base font-bold text-white">Catálogo de Nichos Disponíveis</h3>
+              <p class="text-xs text-slate-400">Crie ou customize templates de nicho que qualquer loja pode utilizar</p>
             </div>
-            <button onclick="createNewNicheTemplate()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 rounded-xl transition">
-              <i class="fas fa-plus"></i> Novo Nicho
-            </button>
           </div>
 
           <form onsubmit="saveNicheConfig(event)" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label class="block text-xs font-bold text-slate-400 mb-1">ID (slug)</label>
+                <label class="block text-xs font-bold text-slate-400 mb-1">ID do Nicho (slug)</label>
                 <input type="text" id="cfgId" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-400 mb-1">Nome da Empresa</label>
+                <label class="block text-xs font-bold text-slate-400 mb-1">Nome Exemplo</label>
                 <input type="text" id="cfgName" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
               </div>
               <div>
@@ -447,7 +481,7 @@
             </div>
 
             <button type="submit" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs transition">
-              Salvar Alterações do Nicho
+              Salvar Alterações no Nicho
             </button>
           </form>
         </div>
